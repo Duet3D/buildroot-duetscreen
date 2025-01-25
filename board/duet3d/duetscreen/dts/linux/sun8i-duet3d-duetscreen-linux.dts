@@ -58,7 +58,6 @@
 		power-source = <3300>;
 	};
 
-
 	sdc0_pins_b: sdc0@1 {
 		pins = "PF0", "PF1", "PF2",
 		       "PF3", "PF4", "PF5";
@@ -89,7 +88,6 @@
 		drive-strength = <10>;
 		bias-pull-up;
 	};
-
 
 	sdc1_pins_a: sdc1@0 {
 		pins = "PG0", "PG1", "PG2",
@@ -172,20 +170,19 @@
 		function = "gpio_in";
 	};
 
-        uart2_pins_a: uart2_pins@0 {  /* For EVB1 board */
-                pins = "PE2", "PE3";
-                function = "uart2";
-                drive-strength = <10>;
-                bias-pull-up;
-        };
+	uart2_pins_a: uart2_pins@0 {  /* For EVB1 board */
+		pins = "PE2", "PE3";
+		function = "uart2";
+		drive-strength = <10>;
+		bias-pull-up;
+	};
 
-        uart2_pins_b: uart2_pins@1 {  /* For EVB1 board */
-                pins = "PE2", "PE3";
-                function = "gpio_in";
-        };
+	uart2_pins_b: uart2_pins@1 {  /* For EVB1 board */
+		pins = "PE2", "PE3";
+		function = "gpio_in";
+	};
 
 	uart3_pins_a: uart3_pins@0 {  /* For t113_evb */
-		//pins = "PG8", "PG9";
 		pins = "PB6", "PB7";
 		function = "uart3";
 		drive-strength = <10>;
@@ -194,6 +191,30 @@
 
 	uart3_pins_b: uart3_pins@1 {  /* For t113_evb */
 		pins = "PB6", "PB7";
+		function = "gpio_in";
+	};
+
+	uart4_pins_a: uart4_pins@0 {
+		pins = "PB2", "PB3";
+		function = "uart4";
+		drive-strength = <10>;
+		bias-pull-up;
+	};
+
+	uart4_pins_b: uart4_pins@1 {
+		pins = "PB2", "PB3";
+		function = "gpio_in";
+	};
+
+	uart5_pins_a: uart5_pins@0 {
+		pins = "PB4", "PB5";
+		function = "uart5";
+		drive-strength = <10>;
+		bias-pull-up;
+	};
+
+	uart5_pins_b: uart5_pins@1 {
+		pins = "PB4", "PB5";
 		function = "gpio_in";
 	};
 
@@ -209,39 +230,35 @@
 	};
 
 	twi1_pins_a: twi1@0 {
-		pins = "PE14", "PE15";
+		pins = "PG8", "PG9";
 		function = "twi1";
 		drive-strength = <10>;
 	};
 
 	twi1_pins_b: twi1@1 {
-		pins = "PE14", "PE15";
+		pins = "PG8", "PG9";
 		function = "gpio_in";
 	};
 
 	twi2_pins_a: twi2@0 {
-		pins = "PE12", "PE13";
+		pins = "PG6", "PG7";
 		function = "twi2";
 		drive-strength = <10>;
 	};
 
 	twi2_pins_b: twi2@1 {
-		pins = "PE12", "PE13";
+		pins = "PG6", "PG7";
 		function = "gpio_in";
 	};
 
 	twi3_pins_a: twi3@0 {
-		/* pins = "PE16", "PE17"; */
-		/* pins = "PG10", "PG11"; */
-		/*pins = "PB6", "PB7";*/
+		pins = "PG10", "PG11";
 		function = "twi3";
 		drive-strength = <10>;
 	};
 
 	twi3_pins_b: twi3@1 {
-		/* pins = "PE16", "PE17"; */
-		/* pins = "PG10", "PG11"; */
-		/*pins = "PB6", "PB7";*/
+		pins = "PG10", "PG11";
 		function = "gpio_in";
 	};
 
@@ -268,7 +285,6 @@
 		pins = "PB0";
 		function = "gpio_in";
 	};
-
 
 	dmic_pins_a: dmic@0 {
 		/* DMIC_PIN: CLK, DATA0, DATA1, DATA2, DATA3*/
@@ -379,6 +395,7 @@
 		drive-strength = <20>;
 		bias-disable;
 	};
+
 	gmac0_pins_a: gmac@0 {
 		allwinner,pins = "PE0", "PE1", "PE2", "PE3", "PE4",
 				 "PE5", "PE6", "PE7","PE8", "PE9";
@@ -398,7 +415,7 @@
 	};
 
 	spi0_pins_a: spi0@0 {
-		pins = "PC2", "PC4", "PC5","PC7", "PC6"; /*clk mosi miso hold wp*/
+		pins = "PC2", "PC4", "PC5", "PC7", "PC6"; /*clk mosi miso hold wp*/
 		function = "spi0";
 		drive-strength = <10>;
 	};
@@ -470,6 +487,7 @@
 		pins = "PF2";
 		function = "gpio_in";
 	};
+
 	rgb24_pins_a: rgb24@0 {
 		allwinner,pins = "PB2", "PB3", "PD0", "PD1", "PD2", "PD3", "PD4", "PD5", \
 			"PB4", "PB5", "PD6", "PD7", "PD8", "PD9", "PD10", "PD11", \
@@ -484,6 +502,7 @@
 		allwinner,drive = <3>;
 		allwinner,pull = <0>;
 	};
+
 	rgb24_pins_b: rgb24@1 {
 		allwinner,pins = "PB2", "PB3", "PD0", "PD1", "PD2", "PD3", "PD4", "PD5", \
 			"PB4", "PB5", "PD6", "PD7", "PD8", "PD9", "PD10", "PD11", \
@@ -498,6 +517,7 @@
 		allwinner,drive = <3>;
 		allwinner,pull = <0>;
 	};
+
 	dsi4lane_pins_a: dsi4lane@0 {
         allwinner,pins = "PD0", "PD1", "PD2", "PD3", "PD4", "PD5", "PD6", "PD7", "PD8", "PD9";
         allwinner,pname = "PD0", "PD1", "PD2", "PD3", "PD4", "PD5", "PD6", "PD7", "PD8", "PD9";
@@ -532,10 +552,10 @@
 };
 
 &uart2 {
-        pinctrl-names = "default", "sleep";
-        pinctrl-0 = <&uart2_pins_a>;
-        pinctrl-1 = <&uart2_pins_b>;
-        status = "disabled";
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&uart2_pins_a>;
+	pinctrl-1 = <&uart2_pins_b>;
+	status = "okay";
 };
 
 &uart3 {
@@ -545,25 +565,18 @@
 	status = "okay";
 };
 
-&sdc2 {
-	non-removable;
-	bus-width = <4>;
-	mmc-ddr-1_8v;
-	mmc-hs200-1_8v;
-	no-sdio;
-	no-sd;
-	ctl-spec-caps = <0x308>;
-	cap-mmc-highspeed;
-	sunxi-power-save-mode;
-	sunxi-dis-signal-vol-sw;
-	mmc-bootpart-noacc;
-	max-frequency = <150000000>;
-	/*vmmc-supply = <&reg_dcdc1>;*/
-	/*emmc io vol 3.3v*/
-	/*vqmmc-supply = <&reg_aldo1>;*/
-	/*emmc io vol 1.8v*/
-	/*vqmmc-supply = <&reg_eldo1>;*/
+&uart4 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&uart4_pins_a>;
+	pinctrl-1 = <&uart4_pins_b>;
 	status = "disabled";
+};
+
+&uart5 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&uart5_pins_a>;
+	pinctrl-1 = <&uart5_pins_b>;
+	status = "okay";
 };
 
 &sdc0 {
@@ -613,6 +626,26 @@
 	status = "okay";
 };
 
+&sdc2 {
+	non-removable;
+	bus-width = <4>;
+	mmc-ddr-1_8v;
+	mmc-hs200-1_8v;
+	no-sdio;
+	no-sd;
+	ctl-spec-caps = <0x308>;
+	cap-mmc-highspeed;
+	sunxi-power-save-mode;
+	sunxi-dis-signal-vol-sw;
+	mmc-bootpart-noacc;
+	max-frequency = <150000000>;
+	/*vmmc-supply = <&reg_dcdc1>;*/
+	/*emmc io vol 3.3v*/
+	/*vqmmc-supply = <&reg_aldo1>;*/
+	/*emmc io vol 1.8v*/
+	/*vqmmc-supply = <&reg_eldo1>;*/
+	status = "disabled";
+};
 
 &twi0 {
 	clock-frequency = <400000>;
@@ -634,30 +667,30 @@
 };
 
 &twi2 { 
-        clock-frequency = <400000>;
-        pinctrl-0 = <&twi2_pins_a>;
-        pinctrl-1 = <&twi2_pins_b>;
-        pinctrl-names = "default", "sleep";
-        dmas = <&dma 45>, <&dma 45>;
-        dma-names = "tx", "rx";
-        status = "okay";
+	clock-frequency = <400000>;
+	pinctrl-0 = <&twi2_pins_a>;
+	pinctrl-1 = <&twi2_pins_b>;
+	pinctrl-names = "default", "sleep";
+	dmas = <&dma 45>, <&dma 45>;
+	dma-names = "tx", "rx";
+	status = "okay";
 
-        ctp@14 {
-                compatible = "allwinner,goodix";
-                device_type = "ctp";
-                reg = <0x14>;
-                status = "okay";
-                ctp_name = "gt9xxnew_ts";
-                ctp_twi_id = <0x2>;
-                ctp_twi_addr = <0x14>;
-                ctp_screen_max_x = <0x400>;
-                ctp_screen_max_y = <0x258>;
-                ctp_revert_x_flag = <0x0>;
-                ctp_revert_y_flag = <0x0>;
-                ctp_exchange_x_y_flag = <0x0>;
-                ctp_int_port = <&pio PB 3 GPIO_ACTIVE_HIGH>;
-                ctp_wakeup = <&pio PB 2 GPIO_ACTIVE_HIGH>;
-        };
+	ctp@14 {
+		compatible = "allwinner,goodix";
+		device_type = "ctp";
+		reg = <0x14>;
+		status = "okay";
+		ctp_name = "gt9xxnew_ts";
+		ctp_twi_id = <0x2>;
+		ctp_twi_addr = <0x14>;
+		ctp_screen_max_x = <0x400>;
+		ctp_screen_max_y = <0x258>;
+		ctp_revert_x_flag = <0x0>;
+		ctp_revert_y_flag = <0x0>;
+		ctp_exchange_x_y_flag = <0x0>;
+		ctp_int_port = <&pio PB 3 GPIO_ACTIVE_HIGH>;
+		ctp_wakeup = <&pio PB 2 GPIO_ACTIVE_HIGH>;
+	};
 };
 
 &twi3 {
@@ -665,29 +698,39 @@
 	pinctrl-0 = <&twi3_pins_a>;
 	pinctrl-1 = <&twi3_pins_b>;
 	pinctrl-names = "default", "sleep";
-	status = "disabled";
+	status = "okay";
 };
 
 &spi0 {
-        clock-frequency = <100000000>;
-        pinctrl-0 = <&spi0_pins_a &spi0_pins_b>;
-        pinctrl-1 = <&spi0_pins_c>;
-        pinctrl-names = "default", "sleep";
-        /*spi-supply = <&reg_dcdc1>;*/
-        spi_slave_mode = <0>;
-        spi0_cs_number = <1>;
-        spi0_cs_bitmap = <1>;
-        status = "okay";
+	clock-frequency = <100000000>;
+	pinctrl-0 = <&spi0_pins_a &spi0_pins_b>;
+	pinctrl-1 = <&spi0_pins_c>;
+	pinctrl-names = "default", "sleep";
+	/*spi-supply = <&reg_dcdc1>;*/
+	spi_slave_mode = <0>;
+	spi0_cs_number = <1>;
+	spi0_cs_bitmap = <1>;
+	status = "okay";
 
-        spi-nand@0 {
-                compatible = "spi-nand";
-                spi-max-frequency=<80000000>;
-                reg = <0x0>;
-                spi-rx-bus-width=<0x04>;
-                spi-tx-bus-width=<0x04>;
-                status="okay";
-        };
+	 spi-nand@0 {
+		 compatible = "spi-nand";
+		 status = "disb";
+		 spi-rx-bus-width = <0x01>;
+		 reg = <0x00>;
+		 spi-tx-bus-width = <0x01>;
+		 spi-max-frequency = <0x5f5e100>;
+	 };
+
+	 spi-nor@0 {
+		 compatible = "jedec,spi-nor";
+		 status = "okay";
+		 spi-rx-bus-width = <0x04>;
+		 reg = <0x00>;
+		 spi-tx-bus-width = <0x04>;
+		 spi-max-frequency = <0x4c4b400>;
+	 };
 };
+
 &spi1 {
 	clock-frequency = <100000000>;
 	pinctrl-0 = <&spi1_pins_a &spi1_pins_b>;
@@ -695,7 +738,7 @@
 	pinctrl-names = "default", "sleep";
 	spi_slave_mode = <0>;
 	spi1_cs_number = <1>;
-        spi1_cs_bitmap = <1>;
+	spi1_cs_bitmap = <1>;
 	status = "disabled";
 
 	spi_board1@0 {
@@ -728,7 +771,7 @@
 &s_cir0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&s_cir0_pins_a>;
-	status = "okay";
+	status = "disabled";
 };
 
 &ir1 {
@@ -746,7 +789,7 @@
 	tx-delay = <3>;
 	rx-delay = <0>;
 	phy-rst = <&pio PE 10 GPIO_ACTIVE_HIGH>;
-	status = "okay";
+	status = "disabled";
 };
 
 &soc {
@@ -806,7 +849,7 @@
 		power_en;
 		pinctrl-0 = <&wlan_pins_a>;
 		pinctrl-names = "default";
-		status        = "okay";
+		status        = "disabled";
 
 		wlan: wlan@0 {
 			compatible    = "allwinner,sunxi-wlan";
@@ -844,7 +887,7 @@
 		uart_index  = <0x1>;
 		bt_wake     = <&pio PG 13 GPIO_ACTIVE_HIGH>;
 		bt_hostwake = <&pio PG 14 GPIO_ACTIVE_HIGH>;
-		status      = "okay";
+		status      = "disabled";
 	};
 };
 
@@ -1037,59 +1080,6 @@ chn_cfg_mode     : Hardware DE channel allocation config. 0:single display with 
 /*	dcdc1-supply = <&reg_dcdc1>;*/
 };
 
-
-#if 0
-&disp {
-	disp_init_enable         = <1>;
-	disp_mode                = <0>;
-
-	screen0_output_type      = <1>;
-	screen0_output_mode      = <4>;
-
-	screen1_output_type      = <1>;
-	screen1_output_mode      = <4>;
-
-	screen1_output_format    = <0>;
-	screen1_output_bits      = <0>;
-	screen1_output_eotf      = <4>;
-	screen1_output_cs        = <257>;
-	screen1_output_dvi_hdmi  = <2>;
-	screen1_output_range     = <2>;
-	screen1_output_scan      = <0>;
-	screen1_output_aspect_ratio = <8>;
-
-	dev0_output_type         = <1>;
-	dev0_output_mode         = <4>;
-	dev0_screen_id           = <0>;
-	dev0_do_hpd              = <0>;
-
-	dev1_output_type         = <4>;
-	dev1_output_mode         = <10>;
-	dev1_screen_id           = <1>;
-	dev1_do_hpd              = <1>;
-
-	def_output_dev           = <0>;
-	hdmi_mode_check          = <1>;
-
-	fb0_format               = <0>;
-	fb0_width                = <1024>;
-	fb0_height               = <600>;
-
-	fb1_format               = <0>;
-	fb1_width                = <0>;
-	fb1_height               = <0>;
-	chn_cfg_mode             = <1>;
-
-	disp_para_zone           = <1>;
-	/*VCC-LCD*/
-	/*dc1sw-supply = <&reg_dc1sw>;*/
-	/*VCC-DSI*/
-/*	eldo3-supply = <&reg_eldo3>;*/
-	/*VCC-PD*/
-/*	dcdc1-supply = <&reg_dcdc1>;*/
-};
-#endif
-
 /*----------------------------------------------------------------------------------
 ;tv configuration
 ;interface          (interface type,1<->cvbs,2<->YPBPR,4<->SVIDEO)
@@ -1164,120 +1154,30 @@ pull up or pull down(default 0), driver level(default 1), data>
 ;For lvds1: use lvds1_pins_a  and lvds1_pins_b instead
 ;For lvds0: use lvds0_pins_a  and lvds0_pins_b instead
 ;----------------------------------------------------------------------------------*/
-/*
-&lcd0 {
-	lcd_used            = <1>;
 
+&lcd0 {
+	/* part 1 */
+	lcd_used            = <1>;
 	lcd_driver_name     = "default_lcd";
-	lcd_backlight       = <50>;
-	lcd_if              = <3>;
-
-	lcd_x               = <1024>;
-	lcd_y               = <600>;
-	lcd_width           = <150>;
-	lcd_height          = <94>;
-	lcd_dclk_freq       = <52>;
-
-	lcd_pwm_used        = <1>;
-	lcd_pwm_ch          = <7>;
-	lcd_pwm_freq        = <50000>;
-	lcd_pwm_pol         = <1>;
-	lcd_pwm_max_limit   = <255>;
-
-	lcd_hbp             = <160>;
-	lcd_ht              = <1344>;
-	lcd_hspw            = <60>;
-	lcd_vbp             = <23>;
-	lcd_vt              = <638>;
-	lcd_vspw            = <10>;
-
-	lcd_lvds_if         = <0>;
-	lcd_lvds_colordepth = <0>;
-	lcd_lvds_mode       = <0>;
-	lcd_frm             = <1>;
-	lcd_hv_clk_phase    = <0>;
-	lcd_hv_sync_polarity= <0>;
-	lcd_gamma_en        = <0>;
-	lcd_bright_curve_en = <0>;
-	lcd_cmap_en         = <0>;
-
-	deu_mode            = <0>;
-	lcdgamma4iep        = <22>;
-	smart_color         = <90>;
-
-	pinctrl-0 = <&lvds0_pins_a>;
-	pinctrl-1 = <&lvds0_pins_b>;
-};
-*/
-/*
-&lcd0 {
-	lcd_used            = <1>;
-
-	lcd_driver_name     = "he0801a068";
-	lcd_backlight       = <50>;
-	lcd_if              = <4>;
-
-	lcd_x               = <800>;
-	lcd_y               = <1280>;
-	lcd_width           = <800>;
-	lcd_height          = <1280>;
-	lcd_dclk_freq       = <78>;
-
-	lcd_pwm_used        = <1>;
-	lcd_pwm_ch          = <7>;
-	lcd_pwm_freq        = <50000>;
-	lcd_pwm_pol         = <1>;
-	lcd_pwm_max_limit   = <255>;
-
-	lcd_hbp             = <149>;
-	lcd_ht              = <978>;
-	lcd_hspw            = <16>;
-	lcd_vbp             = <7>;
-	lcd_vt              = <1329>;
-	lcd_vspw            = <5>;
-
-	lcd_dsi_lane        = <4>;
-	lcd_dsi_if          = <0>;
-	lcd_dsi_format      = <0>;
-	lcd_dsi_te          = <0>;
-	lcd_frm             = <0>;
-	lcd_io_phase        = <0>;
-	lcd_gamma_en        = <0>;
-	lcd_bright_curve_en = <0>;
-	lcd_cmap_en         = <0>;
-
-	deu_mode            = <0>;
-	lcdgamma4iep        = <22>;
-	smart_color         = <90>;
-
-	lcd_gpio_0 = <&pio PG 13 GPIO_ACTIVE_HIGH>;
-	pinctrl-0 = <&dsi4lane_pins_a>;
-	pinctrl-1 = <&dsi4lane_pins_b>;
-};*/
-
-&lcd0 {
-		/* part 1 */
-        lcd_used            = <1>;
-        lcd_driver_name     = "default_lcd";
-	lcd_backlight	    = <100>;
+	lcd_backlight	    = <255>;
 
 	/* part 2 */
 	lcd_if = <0>;
 	lcd_hv_if = <0>;
-	
+
 	/* part 3 */
-        lcd_x               = <1024>;
-        lcd_y               = <600>;
-        lcd_width           = <154>;
-        lcd_height          = <85>;
-        lcd_dclk_freq       = <51>;
-        lcd_hbp             = <140>;
-        lcd_ht              = <1344>;
-        lcd_hspw            = <20>;
-        lcd_vbp             = <20>;
-        lcd_vt              = <635>;
-        lcd_vspw            = <3>;
-		
+	lcd_x               = <1024>;
+	lcd_y               = <600>;
+	lcd_width           = <154>;
+	lcd_height          = <85>;
+	lcd_dclk_freq       = <51>;
+	lcd_hbp             = <140>;
+	lcd_ht              = <1344>;
+	lcd_hspw            = <20>;
+	lcd_vbp             = <20>;
+	lcd_vt              = <635>;
+	lcd_vspw            = <3>;
+
 	lcd_pwm_used        = <1>;
 	lcd_pwm_ch          = <7>;
 	lcd_pwm_freq        = <500>;
@@ -1290,15 +1190,15 @@ pull up or pull down(default 0), driver level(default 1), data>
 	lcd_cmap_en = <0>;
 	lcd_hv_clk_phase = <0>;
 	lcd_hv_sync_polarity= <0>;
-				
+
 	/* part 6 */
+	lcd_bl_en_used = <1>;
+	lcd_bl_en = <&pio PE 4 GPIO_ACTIVE_HIGH>;
 	lcd_power = "vcc-lcd";
 	lcd_pin_power = "vcc-pd";
 	pinctrl-0 = <&rgb18_pins_a>;
 	pinctrl-1 = <&rgb18_pins_b>;
 };
-
-
 
 /*
 tvd configuration
@@ -1363,7 +1263,7 @@ tvd_row*tvd_column is the total tvd channel number to be used in multichannel mo
 };
 
 &hdmi {
-	hdmi_used = <1>;
+	hdmi_used = <0>;
 	hdmi_power_cnt = <0>;
 	hdmi_hdcp_enable = <1>;
 	hdmi_hdcp22_enable = <0>;
@@ -1420,15 +1320,15 @@ tvd_row*tvd_column is the total tvd channel number to be used in multichannel mo
 	pinctrl-names   = "default","sleep";
 	pinctrl-0       = <&dmic_pins_a>;
 	pinctrl-1       = <&dmic_pins_b>;
-	status = "okay";
+	status = "disabled";
 };
 
 &dmic_codec {
-	status = "okay";
+	status = "disabled";
 };
 
 &sounddmic {
-	status = "okay";
+	status = "disabled";
 };
 
 /*-----------------------------------------------------------------------------
@@ -1628,8 +1528,6 @@ tvd_row*tvd_column is the total tvd channel number to be used in multichannel mo
 	allwinner,tp-sensitive-adjust = <0xf>;
 	allwinner,filter-type = <0x1>;
 	allwinner,ts-attached;
-	status = "okay";
+	status = "disabled";
 };
-
-
 
