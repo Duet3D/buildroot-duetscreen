@@ -1,5 +1,5 @@
 bootargs=earlyprintk=sunxi-uart,0x02500000 clk_ignore_unused initcall_debug=0 console=ttyS0,115200 loglevel=8 root=/dev/mmcblk0p2 init=/sbin/init partitions=ext4 cma=8M gpt=1
 bootdelay=2
 boot_check=sunxi_card0_probe;mmcinfo;mmc part
-boot_mmc=fatload mmc 0:1 0x43000000 sun8i-duet3d-duetscreen-linux.dtb || fatload mmc 0:1 0x43000000 boot/${fdtfile}; fatload mmc 0:1 0x42000000 uImage || fatload mmc 0:1 0x42000000 boot/uImage; bootm 0x42000000 - 0x43000000
+boot_mmc=fatload mmc 0:1 0x4fc00000 sun8i-duet3d-duetscreen-linux.dtb; fatload mmc 0:1 0x45000000 uImage; bootm 0x45000000 - 0x4fc00000
 bootcmd=run boot_check boot_mmc
