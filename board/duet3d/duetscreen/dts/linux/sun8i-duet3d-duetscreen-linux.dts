@@ -262,30 +262,6 @@
 		function = "gpio_in";
 	};
 
-	s_cir0_pins_a: s_cir0@0 {
-		pins = "PB1";
-		function = "ir";
-		drive-strength = <10>;
-		bias-pull-up;
-	};
-
-	s_cir0_pins_b: s_cir0@1 {
-		pins = "PB1";
-		function = "gpio_in";
-	};
-
-	ir1_pins_a: ir1@0 {
-		pins = "PB0";
-		function = "ir";
-		drive-strength = <10>;
-		bias-pull-up;
-	};
-
-	ir1_pins_b: ir1@1 {
-		pins = "PB0";
-		function = "gpio_in";
-	};
-
 	dmic_pins_a: dmic@0 {
 		/* DMIC_PIN: CLK, DATA0, DATA1, DATA2, DATA3*/
 		pins = "PB12", "PB11", "PB10", "PE14", "PB8";
@@ -453,15 +429,39 @@
 		drive-strength = <10>;
 	};
 
+	pwm2_pin_a: pwm2@0 {
+		pins = "PE8";
+		function = "pwm2";
+		drive-strength = <10>;
+		bias-pull-up;
+	};
+
+	pwm2_pin_b: pwm2@1 {
+		pins = "PE8";
+		function = "gpio_in";
+	};
+
 	pwm3_pin_a: pwm3@0 {
-		pins = "PB0";
+		pins = "PE9";
 		function = "pwm3";
 		drive-strength = <10>;
 		bias-pull-up;
 	};
 
 	pwm3_pin_b: pwm3@1 {
-		pins = "PB0";
+		pins = "PE9";
+		function = "gpio_in";
+	};
+
+	pwm4_pin_a: pwm4@0 {
+		pins = "PE10";
+		function = "pwm4";
+		drive-strength = <10>;
+		bias-pull-up;
+	};
+
+	pwm4_pin_b: pwm4@1 {
+		pins = "PE10";
 		function = "gpio_in";
 	};
 
@@ -474,17 +474,6 @@
 
 	pwm7_pin_b: pwm7@1 {
 		pins = "PD22";
-		function = "gpio_in";
-	};
-
-	ledc_pins_a: ledc@0 {
-		pins = "PF2";
-		function = "ledc";
-		drive-strength = <10>;
-	};
-
-	ledc_pins_b: ledc@1 {
-		pins = "PF2";
 		function = "gpio_in";
 	};
 
@@ -516,24 +505,6 @@
 		allwinner,muxsel = <7>;
 		allwinner,drive = <3>;
 		allwinner,pull = <0>;
-	};
-
-	dsi4lane_pins_a: dsi4lane@0 {
-        allwinner,pins = "PD0", "PD1", "PD2", "PD3", "PD4", "PD5", "PD6", "PD7", "PD8", "PD9";
-        allwinner,pname = "PD0", "PD1", "PD2", "PD3", "PD4", "PD5", "PD6", "PD7", "PD8", "PD9";
-        allwinner,function = "dsi4lane";
-        allwinner,muxsel = <4>;
-        allwinner,drive = <3>;
-        allwinner,pull = <0>;
-	};
-
-	dsi4lane_pins_b: dsi4lane@1 {
-        allwinner,pins = "PD0", "PD1", "PD2", "PD3", "PD4", "PD5", "PD6", "PD7", "PD8", "PD9";
-        allwinner,pname = "PD0", "PD1", "PD2", "PD3", "PD4", "PD5", "PD6", "PD7", "PD8", "PD9";
-        allwinner,function = "dsi4lane_suspend";
-        allwinner,muxsel = <7>;
-        allwinner,drive = <1>;
-        allwinner,pull = <0>;
 	};
 };
 
@@ -752,34 +723,6 @@
 	};
 };
 
-&ledc {
-	pinctrl-0 = <&ledc_pins_a>;
-	pinctrl-1 = <&ledc_pins_b>;
-	led_count = <32>;
-	output_mode = "GRB";
-	reset_ns = <84>;
-	t1h_ns = <800>;
-	t1l_ns = <450>;
-	t0h_ns = <400>;
-	t0l_ns = <850>;
-	wait_time0_ns = <84>;
-	wait_time1_ns = <84>;
-	wait_data_time_ns = <600000>;
-	status	= "disabled";
-};
-
-&s_cir0 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&s_cir0_pins_a>;
-	status = "disabled";
-};
-
-&ir1 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&ir1_pins_a>;
-	status = "disabled";
-};
-
 &gmac0 {
 	pinctrl-0 = <&gmac0_pins_a>;
 	pinctrl-1 = <&gmac0_pins_b>;
@@ -847,38 +790,17 @@
 		compatible    = "allwinner,sunxi-rfkill";
 		chip_en;
 		power_en;
-		pinctrl-0 = <&wlan_pins_a>;
-		pinctrl-names = "default";
-		status        = "disabled";
+		status        = "okay";
 
 		wlan: wlan@0 {
 			compatible    = "allwinner,sunxi-wlan";
-			clock-names = "32k-fanout1";
-			clocks = <&ccu CLK_FANOUT1_OUT>;
 			wlan_busnum    = <0x1>;
-			wlan_regon    = <&pio PG 12 GPIO_ACTIVE_HIGH>;
-			wlan_hostwake  = <&pio PG 10 GPIO_ACTIVE_HIGH>;
+			wlan_regon    = <&pio PE 13 GPIO_ACTIVE_HIGH>;
 			/*wlan_power    = "VCC-3V3";*/
 			/*wlan_power_vol = <3300000>;*/
 			/*interrupt-parent = <&pio>;
 			interrupts = < PG 10 IRQ_TYPE_LEVEL_HIGH>;*/
 			wakeup-source;
-
-		};
-
-		bt: bt@0 {
-			compatible    = "allwinner,sunxi-bt";
-			pinctrl-0 = <&wlan_pins_a>;
-			pinctrl-names = "default";
-			clock-names = "32k-fanout1";
-			clocks = <&ccu CLK_FANOUT1_OUT>;
-			/*bt_power_num = <0x01>;*/
-			/*bt_power      = "axp803-dldo1";*/
-			/*bt_io_regulator = "axp803-dldo1";*/
-			/*bt_io_vol = <3300000>;*/
-			/*bt_power_vol = <330000>;*/
-			bt_rst_n      = <&pio PG 15 GPIO_ACTIVE_LOW>;
-			status        = "okay";
 		};
 	};
 
@@ -1485,10 +1407,24 @@ tvd_row*tvd_column is the total tvd channel number to be used in multichannel mo
 	status = "okay";
 };
 
+&pwm2 {
+	pinctrl-names = "active", "sleep";
+	pinctrl-0 = <&pwm2_pin_a>;
+	pinctrl-1 = <&pwm2_pin_b>;
+	status = "okay";
+};
+
 &pwm3 {
 	pinctrl-names = "active", "sleep";
 	pinctrl-0 = <&pwm3_pin_a>;
 	pinctrl-1 = <&pwm3_pin_b>;
+	status = "okay";
+};
+
+&pwm4 {
+	pinctrl-names = "active", "sleep";
+	pinctrl-0 = <&pwm4_pin_a>;
+	pinctrl-1 = <&pwm4_pin_b>;
 	status = "okay";
 };
 
