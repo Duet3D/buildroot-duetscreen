@@ -124,8 +124,8 @@
 	};
 
 	wlan_pins_a:wlan@0 {
-		pins = "PG11";
-		function = "clk_fanout1";
+		pins = "PE11";
+		function = "gpio_in";
 	};
 
 	lvds0_pins_a: lvds0@0 {
@@ -159,14 +159,14 @@
 	};
 
 	uart1_pins_a: uart1_pins@0 {  /* For EVB1 board */
-		pins = "PG6", "PG7", "PG8", "PG9";
+		pins = "PG12", "PG13";
 		function = "uart1";
 		drive-strength = <10>;
 		bias-pull-up;
 	};
 
 	uart1_pins_b: uart1_pins {  /* For EVB1 board */
-		pins = "PG6", "PG7", "PG8", "PG9";
+		pins = "PG12", "PG13";
 		function = "gpio_in";
 	};
 
@@ -634,7 +634,7 @@
 	pinctrl-0 = <&twi1_pins_a>;
 	pinctrl-1 = <&twi1_pins_b>;
 	pinctrl-names = "default", "sleep";
-	status = "disabled";
+	status = "okay";
 };
 
 &twi2 { 
@@ -654,13 +654,14 @@
 		ctp_name = "gt9xxnew_ts";
 		ctp_twi_id = <0x2>;
 		ctp_twi_addr = <0x14>;
-		ctp_screen_max_x = <0x400>;
-		ctp_screen_max_y = <0x258>;
+		ctp_screen_max_x = <1024>;
+		ctp_screen_max_y = <600>;
 		ctp_revert_x_flag = <0x0>;
 		ctp_revert_y_flag = <0x0>;
 		ctp_exchange_x_y_flag = <0x0>;
-		ctp_int_port = <&pio PB 3 GPIO_ACTIVE_HIGH>;
-		ctp_wakeup = <&pio PB 2 GPIO_ACTIVE_HIGH>;
+		ctp_int_port = <&pio PE 12 GPIO_ACTIVE_HIGH>;
+		ctp_wakeup = <&pio PE 11 GPIO_ACTIVE_HIGH>;
+		ctp_vkey_num = <0x0>;
 	};
 };
 
@@ -685,7 +686,7 @@
 
 	 spi-nand@0 {
 		 compatible = "spi-nand";
-		 status = "disb";
+		 status = "disabled";
 		 spi-rx-bus-width = <0x01>;
 		 reg = <0x00>;
 		 spi-tx-bus-width = <0x01>;
@@ -788,20 +789,11 @@
 
 	rfkill: rfkill@0 {
 		compatible    = "allwinner,sunxi-rfkill";
-		chip_en;
-		power_en;
+		chip_en = <&pio PE 11 GPIO_ACTIVE_HIGH>;
+		power_en = <&pio PE 11 GPIO_ACTIVE_HIGH>;
+		pinctrl-0 = <&wlan_pins_a>;
+		pinctrl-names = "default";
 		status        = "okay";
-
-		wlan: wlan@0 {
-			compatible    = "allwinner,sunxi-wlan";
-			wlan_busnum    = <0x1>;
-			wlan_regon    = <&pio PE 13 GPIO_ACTIVE_HIGH>;
-			/*wlan_power    = "VCC-3V3";*/
-			/*wlan_power_vol = <3300000>;*/
-			/*interrupt-parent = <&pio>;
-			interrupts = < PG 10 IRQ_TYPE_LEVEL_HIGH>;*/
-			wakeup-source;
-		};
 	};
 
 	btlpm: btlpm@0 {
@@ -1223,19 +1215,19 @@ tvd_row*tvd_column is the total tvd channel number to be used in multichannel mo
 	/* regulator about */
 	/* avcc-supply	= <&reg_aldo1>; */
 	/* hpvcc-supply	= <&reg_eldo1>; */
-	status = "okay";
+	status = "disabled";
 };
 
 &sndcodec {
 	hp_detect_case	= <0x00>;
 	jack_enable		= <0x01>;
-	status = "okay";
+	status = "disabled";
 };
 
 &dummy_cpudai {
 	playback_cma	= <128>;
 	capture_cma		= <256>;
-	status			= "okay";
+	status			= "disabled";
 };
 
 &dmic {
@@ -1351,11 +1343,11 @@ tvd_row*tvd_column is the total tvd channel number to be used in multichannel mo
 };
 
 &spdif {
-	status = "okay";
+	status = "disabled";
 };
 
 &soundspdif {
-	status = "okay";
+	status = "disabled";
 };
 
 /*
@@ -1371,9 +1363,9 @@ tvd_row*tvd_column is the total tvd channel number to be used in multichannel mo
 	usb_port_type = <0x2>;
 	usb_detect_type = <0x1>;
 	usb_detect_mode = <0>;
-	usb_id_gpio = <&pio PB 6 GPIO_ACTIVE_HIGH>;
+	usb_id_gpio = <&pio PE 7 GPIO_ACTIVE_HIGH>;
 	enable-active-high;
-	usb_det_vbus_gpio = <&pio PB 2 GPIO_ACTIVE_HIGH>;
+	usb_det_vbus_gpio = <&pio PE 7 GPIO_ACTIVE_HIGH>;
 	usb_wakeup_suspend = <0>;
 	usb_serial_unique = <0>;
 	usb_serial_number = "20080411";
@@ -1439,25 +1431,14 @@ tvd_row*tvd_column is the total tvd channel number to be used in multichannel mo
 	channel_num = <1>;
 	channel_select = <0x1>;
 	channel_data_select = <0>;
-	channel_compare_select = <0x1>;
-	channel_cld_select = <0x1>;
+	channel_compare_select = <0>;
+	channel_cld_select = <0>;
 	channel_chd_select = <0>;
 	channel0_compare_lowdata = <1700000>;
 	channel0_compare_higdata = <1200000>;
 	channel1_compare_lowdata = <460000>;
 	channel1_compare_higdata = <1200000>;
-	key_cnt = <5>;
-	key0_vol = <210>;
-	key0_val = <115>;
-	key1_vol = <410>;
-	key1_val = <114>;
-	key2_vol = <590>;
-	key2_val = <119>;
-	key3_vol = <750>;
-	key3_val = <373>;
-	key4_vol = <880>;
-	key4_val = <28>;
-	status = "okay";
+	status = "disabled";
 };
 
 &rtp {
