@@ -36,6 +36,26 @@
 		gpio = <&pio PB 3 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 	};
+
+	can0 {
+		compatible = "allwinner,sun8i-can";
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&can0_pins_a>;
+		pinctrl-1 = <&can0_pins_b>;
+		device_type = "can0";
+		id = <0>;
+		status = "okay";
+	};
+
+	can1 {
+		compatible = "allwinner,sun8i-can";
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&can1_pins_a>;
+		pinctrl-1 = <&can1_pins_b>;
+		device_type = "can1";
+		id = <1>;
+		status = "disabled";
+	};
 };
 
 &cpu0 {
@@ -43,6 +63,35 @@
 };
 
 &pio {
+	can0_pins_a: can0@0 {
+		pins = "PB2", "PB3";
+		drive-strength = <10>;
+		phandle = <0x0c>;
+		function = "can0";
+		bias-pull-up;
+	};
+
+	can0_pins_b: can0@1 {
+		pins = "PB2", "PB3";
+		drive-strength = <10>;
+		function = "can0";
+		bias-pull-up;
+	};
+
+	can1_pins_a: can1@0 {
+		pins = "PB4", "PB5";
+		drive-strength = <10>;
+		function = "can1";
+		bias-pull-up;
+	};
+
+	can1_pins_b: can1@1 {
+		pins = "PB4", "PB5";
+		drive-strength = <10>;
+		function = "can1";
+		bias-pull-up;
+	};
+
 	sdc0_pins_a: sdc0@0 {
 		allwinner,pins = "PF0", "PF1", "PF2",
 				 "PF3", "PF4", "PF5";
@@ -123,7 +172,7 @@
 		function = "gpio_in";
 	};
 
-	wlan_pins_a:wlan@0 {
+	wlan_pins_a: wlan@0 {
 		pins = "PE13";
 		function = "gpio_in";
 	};
@@ -789,10 +838,10 @@
 
 	rfkill: rfkill@0 {
 		compatible = "allwinner,sunxi-rfkill";
+		pinctrl-names = "default";
+		pinctrl-0 = <&wlan_pins_a>;
 		chip_en;
 		power_en;
-		pinctrl-0 = <&wlan_pins_a>;
-		pinctrl-names = "default";
 		status = "okay";
 	};
 

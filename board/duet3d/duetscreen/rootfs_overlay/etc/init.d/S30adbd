@@ -1,0 +1,40 @@
+#!/bin/sh
+
+start() {
+    echo -n "Starting adbd..."
+	modprobe g_ffs
+    mkdir -p /dev/usb-ffs/adb
+    mount -t functionfs adb /dev/usb-ffs/adb
+	adbd &
+    echo "done"
+}
+
+stop() {
+    echo -n "Stopping adbd..."
+    killall adbd
+    umount /dev/usb-ffs/adb
+	rm -r /dev/usb-ffs
+    echo "done"
+}
+
+restart() {
+    stop
+    start
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        restart
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+        ;;
+esac
+
