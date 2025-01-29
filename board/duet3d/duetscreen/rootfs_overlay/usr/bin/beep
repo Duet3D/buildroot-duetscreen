@@ -1,0 +1,43 @@
+#!/bin/sh
+
+# Default frequency
+DEFAULT_FREQUENCY=1000
+
+# Check if at least one argument (beep time) is provided
+if [ -z "$1" ]; then
+	echo "Usage: $0 <beep_time_ms> [frequency_hz]"
+	exit 1
+fi
+
+# Assign arguments to variables
+BEEP_TIME_MS=$1
+FREQUENCY=${2:-$DEFAULT_FREQUENCY}
+
+# Calculate period in nanoseconds
+PERIOD_NS=$((1000000000 / FREQUENCY))
+
+# Calculate duty cycle (50% of the period)
+DUTY_CYCLE_NS=$((PERIOD_NS / 2))
+
+# Export the PWM channel if required
+if [ ! -d /sys/class/pwm/pwmchip0/pwm3 ]; then
+	echo 3 > /sys/class/pwm/pwmchip0/export
+fi
+
+# Set the period
+echo $PERIOD_NS > /sys/class/pwm/pwmchip0/pwm3/period
+
+# Set the duty cycle
+echo $DUTY_CYCLE_NS > /sys/class/pwm/pwmchip0/pwm3/duty_cycle
+
+# Enable the PWM output
+echo 1 > /sys/class/pwm/pwmchip0/pwm3/enable
+
+# Sleep for the specified beep time
+sleep $(echo "scale=3; $BEEP_TIME_MS / 1000" | bc)
+
+# Disable the PWM output
+echo $DUTY_CYCLE_NS > /sys/class/pwm/pwmchip0/pwm3/period
+
+# This does not work because it does not fully turn off the PWM channel
+#echo 0 > /sys/class/pwm/pwmchip0/pwm3/enable

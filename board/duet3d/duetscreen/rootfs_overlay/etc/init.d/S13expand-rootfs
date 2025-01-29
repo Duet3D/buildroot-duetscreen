@@ -6,7 +6,7 @@ case "$1" in
 		resize2fs /dev/mmcblk0p2 &>/dev/null
 		ret=$?
 		[ ${ret} -eq 0 ] && echo "done" || echo "failed"
-		rm -f /etc/init.d/S23expand-rootfs
+		rm -f /etc/init.d/S13expand-rootfs
 		exit ${ret}
 		;;
 	*)
