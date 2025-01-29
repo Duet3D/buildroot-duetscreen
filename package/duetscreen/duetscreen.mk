@@ -5,8 +5,9 @@
 ################################################################################
 
 DUETSCREEN_VERSION = HEAD
-DUETSCREEN_SITE = $(DUETSCREEN_PKGDIR)/src
-DUETSCREEN_SITE_METHOD = local
+DUETSCREEN_SITE = git@github.com:Duet3D/duetscreen.git
+DUETSCREEN_SITE_METHOD = git
+DUETSCREEN_GIT_SUBMODULES = YES
 DUETSCREEN_LICENSE = MIT
 DUETSCREEN_LICENSE_FILES = license.txt
 DUETSCREEN_DEPENDENCIES = libusb-compat sdl2
