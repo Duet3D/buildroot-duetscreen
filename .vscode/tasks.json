@@ -1,5 +1,40 @@
 {
     "version": "2.0.0",
+    "inputs": [
+        {
+            "type": "pickString",
+            "id": "sdCardDevice",
+            "description": "Select the SD card device to flash",
+            "options": [
+                "/dev/sda",
+                "/dev/sdb",
+                "/dev/sdc",
+                "/dev/sdd",
+                "/dev/sde",
+                "/dev/sdf",
+                "/dev/sdg",
+                "/dev/sdh",
+                "/dev/sdi",
+                "/dev/sdj",
+                "/dev/sdk",
+                "/dev/sdl",
+                "/dev/sdm",
+                "/dev/sdn",
+                "/dev/sdo",
+                "/dev/sdp",
+                "/dev/sdq",
+                "/dev/sdr",
+                "/dev/sds",
+                "/dev/sdt",
+                "/dev/sdu",
+                "/dev/sdv",
+                "/dev/sdw",
+                "/dev/sdx",
+                "/dev/sdy",
+                "/dev/sdz"
+            ]
+        }
+    ],
     "tasks": [
         {
             "label": "Configure Buildroot",
@@ -13,7 +48,7 @@
                 "isDefault": false
             },
             "problemMatcher": [],
-            "detail": "Task to configure Buildroot with the duetscreen config"
+            "detail": "Configure Buildroot with the DuetScreen config"
         },
         {
             "label": "Build Project",
@@ -27,7 +62,10 @@
             "problemMatcher": [
                 "$gcc"
             ],
-            "detail": "Task to build the project using make"
+            "detail": "Build the project to create sdcard.img",
+            "dependsOn": [
+                "Configure Buildroot"
+            ]
         },
         {
             "label": "Build Project - WSL",
@@ -44,7 +82,29 @@
                 "isDefault": true
             },
             "problemMatcher": [],
-            "detail": "Task to build the toolchain on WSL"
+            "detail": "Build the project to create sdcard.img on WSL",
+            "dependsOn": [
+                "Configure Buildroot"
+            ]
+        },
+        {
+            "label": "Flash SD Card",
+            "type": "shell",
+            "command": "sudo",
+            "args": [
+                "dd",
+                "if=output/images/sdcard.img",
+                "of=${input:sdCardDevice}",
+                "bs=4M",
+                "status=progress",
+                "conv=fsync"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Flash the sdcard.img to the SD card."
         },
         {
             "label": "Build DuetScreen",
@@ -76,7 +136,10 @@
                 "isDefault": false
             },
             "problemMatcher": [],
-            "detail": "Push the DuetScreen binary to the screen and restart the service"
+            "detail": "Push the DuetScreen binary to the screen and restart the service",
+            "dependsOn": [
+                "Build DuetScreen"
+            ]
         }
     ]
 }
