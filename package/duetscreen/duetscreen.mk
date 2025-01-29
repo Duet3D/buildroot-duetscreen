@@ -5,7 +5,7 @@
 ################################################################################
 
 DUETSCREEN_VERSION = HEAD
-DUETSCREEN_SITE = /home/vm/DuetScreen
+DUETSCREEN_SITE = $(DUETSCREEN_PKGDIR)/src
 DUETSCREEN_SITE_METHOD = local
 DUETSCREEN_LICENSE = MIT
 DUETSCREEN_LICENSE_FILES = license.txt
@@ -26,8 +26,8 @@ endef
 define DUETSCREEN_INSTALL_TARGET_CMDS
 	install -d -m755 $(TARGET_DIR)/opt/DuetScreen
 	install -m644 $(DUETSCREEN_PKGDIR)/config.json $(TARGET_DIR)/etc/config.json
-	install -m755 $(@D)/out/build/$(DUETSCREEN_PRESET)/DuetScreen $(TARGET_DIR)/usr/bin/DuetScreen
-	install -m755 $(@D)/out/build/$(DUETSCREEN_PRESET)/lib/* $(TARGET_DIR)/usr/lib
+	install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/DuetScreen $(TARGET_DIR)/usr/bin/DuetScreen
+	install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/lib/* $(TARGET_DIR)/usr/lib
 endef
 
 $(eval $(cmake-package))
