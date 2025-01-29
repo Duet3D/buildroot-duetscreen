@@ -13,3 +13,5 @@
 *.rej
 *~
 *.pyc
+
+package/duetscreen/src

@@ -1,0 +1,82 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Configure Buildroot",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "duet3d_duetscreen_defconfig"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Task to configure Buildroot with the duetscreen config"
+        },
+        {
+            "label": "Build Project",
+            "type": "shell",
+            "command": "make",
+            "args": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Task to build the project using make"
+        },
+        {
+            "label": "Build Project - WSL",
+            "type": "shell",
+            "command": "make",
+            "args": [],
+            "options": {
+                "env": {
+                    "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "detail": "Task to build the toolchain on WSL"
+        },
+        {
+            "label": "Build DuetScreen",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "duetscreen-rebuild"
+            ],
+            "options": {
+                "env": {
+                    "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Task to build only the DuetScreen component. Output at `output/target/usr/bin/DuetScreen`"
+        },
+        {
+            "label": "Push DuetScreen",
+            "type": "shell",
+            "command": "adb shell start-stop-daemon -K -n DuetScreen; adb push output/target/usr/bin/DuetScreen /usr/bin/DuetScreen; adb shell start-stop-daemon -S DuetScreen",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Push the DuetScreen binary to the screen and restart the service"
+        }
+    ]
+}
