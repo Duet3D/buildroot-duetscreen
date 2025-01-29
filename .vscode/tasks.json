@@ -125,7 +125,26 @@
             "problemMatcher": [
                 "$gcc"
             ],
-            "detail": "Task to build only the DuetScreen component. Output at `output/target/usr/bin/DuetScreen`"
+            "detail": "Task to build only the DuetScreen component from github master. Output at `output/target/usr/bin/DuetScreen`"
+        },
+        {
+            "label": "Build DuetScreen - Local",
+            "type": "shell",
+            "command": "source ${workspaceFolder}/.vscode/.env; make duetscreen-rebuild",
+            "args": [],
+            "options": {
+                "env": {
+                    "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Task to build only the DuetScreen component from a local path. Output at `output/target/usr/bin/DuetScreen`"
         },
         {
             "label": "Push DuetScreen",
@@ -138,7 +157,7 @@
             "problemMatcher": [],
             "detail": "Push the DuetScreen binary to the screen and restart the service",
             "dependsOn": [
-                "Build DuetScreen"
+                "Build DuetScreen - Local"
             ]
         }
     ]
