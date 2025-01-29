@@ -30,8 +30,9 @@ case "$1" in
 		fi
 
 		# Enable SSH on demand
-		if [ -f /boot/ssh && ! -f /etc/init.d/S50dropbear ]; then
+		if [ -f /boot/ssh ] && [ ! -f /etc/init.d/S50dropbear ]; then
 			mv /etc/init.d/50dropbear /etc/init.d/S50dropbear
+			/etc/init.d/S50dropbear start
 		fi
 
 		;;

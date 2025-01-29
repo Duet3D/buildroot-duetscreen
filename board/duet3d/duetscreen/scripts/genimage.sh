@@ -9,13 +9,6 @@ EOF
   exit 1
 }
 
-# Make boot directory
-mkdir "${BUILD_DIR}/boot"
-
-# Delete unneeded files
-rm "${BUILD_DIR}/etc/init.d/S50dropbear"
-rm "${BUILD_DIR}/lib/dhcpcd/dhcpcd-hooks/50-timesyncd.conf"
-
 # Parse arguments and put into argument list of the script
 opts="$(getopt -n "${0##*/}" -o c: -- "$@")" || exit $?
 eval set -- "$opts"
