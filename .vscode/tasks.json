@@ -107,7 +107,7 @@
             "detail": "Flash the sdcard.img to the SD card."
         },
         {
-            "label": "Build DuetScreen",
+            "label": "Build DuetScreen - Github",
             "type": "shell",
             "command": "make",
             "args": [
@@ -147,7 +147,7 @@
             "detail": "Task to build only the DuetScreen component from a local path. Output at `output/target/usr/bin/DuetScreen`"
         },
         {
-            "label": "Push DuetScreen",
+            "label": "Push DuetScreen - ADB",
             "type": "shell",
             "command": "adb shell start-stop-daemon -K -n DuetScreen; adb push output/target/usr/bin/DuetScreen /usr/bin/DuetScreen; adb shell start-stop-daemon -S DuetScreen",
             "group": {
@@ -159,6 +159,27 @@
             "dependsOn": [
                 "Build DuetScreen - Local"
             ]
+            ,
+            "runOptions": {
+                "instanceLimit": 2,
+            }
+        },
+        {
+            "label": "Push DuetScreen - SSH",
+            "type": "shell",
+            "command": "source ${workspaceFolder}/.vscode/.env; ./push_duetscreen.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Push the DuetScreen binary to the screen and restart the service",
+            "dependsOn": [
+                "Build DuetScreen - Local"
+            ],
+            "runOptions": {
+                "instanceLimit": 2,
+            }
         }
     ]
 }

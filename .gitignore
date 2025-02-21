@@ -15,4 +15,5 @@
 *.pyc
 
 .vscode/.env
+.vscode/settings.json
 package/duetscreen/src
