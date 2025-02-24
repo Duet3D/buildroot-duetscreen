@@ -68,6 +68,17 @@
             ]
         },
         {
+            "label": "Clean DuetScreen",
+            "type": "shell",
+            "command": "rm -rf output/build/duetscreen-HEAD; rm -rf dl/duetscreen",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Clean the DuetScreen build directory"
+        },
+        {
             "label": "Build Project - WSL",
             "type": "shell",
             "command": "make",
