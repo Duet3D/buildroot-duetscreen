@@ -31,7 +31,7 @@ endef
 
 define DUETSCREEN_INSTALL_TARGET_CMDS
 	install -d -m755 $(TARGET_DIR)/opt/DuetScreen
-	install -m644 $(DUETSCREEN_PKGDIR)/config.json $(TARGET_DIR)/etc/config.json
+	install -m644 $(DUETSCREEN_PKGDIR)/config.json $(TARGET_DIR)/etc/duetscreen.json
 	install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/DuetScreen $(TARGET_DIR)/usr/bin/DuetScreen
 	install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/lib/* $(TARGET_DIR)/usr/lib
 endef

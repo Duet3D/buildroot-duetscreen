@@ -1,1 +1,13 @@
-{"debug":{"level":2},"duet":{"baud_rate":4098,"communication_type":2,"hostname":"ender6","password":"","poll_interval":500}}
+{
+    "debug": {
+        "level": 2
+    },
+    "duet": {
+        "baud_rate": 4098,
+        "communication_type": 1,
+        "hostname": "192.168.",
+        "password": "",
+        "poll_interval": 500
+    },
+    "info_timeout": 2000
+}
