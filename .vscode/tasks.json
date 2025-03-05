@@ -81,7 +81,7 @@
         {
             "label": "Build Project - WSL",
             "type": "shell",
-            "command": "make",
+            "command": "source ${workspaceFolder}/.vscode/.env; make",
             "args": [],
             "options": {
                 "env": {
