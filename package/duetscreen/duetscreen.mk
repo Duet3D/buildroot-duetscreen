@@ -15,7 +15,7 @@ DUETSCREEN_GIT_SUBMODULES = YES
 endif
 DUETSCREEN_LICENSE = MIT
 DUETSCREEN_LICENSE_FILES = license.txt
-DUETSCREEN_DEPENDENCIES = ffmpeg libusb-compat sdl2
+DUETSCREEN_DEPENDENCIES = ffmpeg libpng libusb-compat sdl2
 
 DUETSCREEN_PRESET = T113-Debug
 DUETSCREEN_CONF_OPTS = --preset $(DUETSCREEN_PRESET)
@@ -31,9 +31,13 @@ endef
 
 define DUETSCREEN_INSTALL_TARGET_CMDS
 	install -d -m755 $(TARGET_DIR)/opt/DuetScreen
+	rm -rf $(TARGET_DIR)/etc/assets
+	mkdir -p $(TARGET_DIR)/etc/assets
+	install -m644 $(DUETSCREEN_BUILDDIR)/assets/* $(TARGET_DIR)/etc/assets
 	install -m644 $(DUETSCREEN_PKGDIR)/config.json $(TARGET_DIR)/etc/duetscreen.json
 	install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/DuetScreen $(TARGET_DIR)/usr/bin/DuetScreen
 	install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/lib/* $(TARGET_DIR)/usr/lib
+	install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/libraries/lvgl/lib/* $(TARGET_DIR)/usr/lib
 endef
 
 $(eval $(cmake-package))
