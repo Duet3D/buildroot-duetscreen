@@ -8,6 +8,12 @@ DUETSCREEN_VERSION = HEAD
 ifdef DUETSCREEN_SRC
 DUETSCREEN_SITE = $(DUETSCREEN_SRC)
 DUETSCREEN_SITE_METHOD = local
+DUETSCREEN_OVERRIDE_SRCDIR_RSYNC_EXCLUSIONS = \
+	--exclude .vscode/ \
+	--exclude libraries/lvgl/build \
+	--exclude libraries/lvgl/tests \
+	--exclude out/ \
+	--exclude node_modules/
 else
 DUETSCREEN_SITE = git@github.com:Duet3D/duetscreen.git
 DUETSCREEN_SITE_METHOD = git
