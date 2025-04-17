@@ -19,6 +19,7 @@ DUETSCREEN_DEPENDENCIES = ffmpeg libpng libusb-compat sdl2
 
 DUETSCREEN_PRESET = T113-Debug
 DUETSCREEN_CONF_OPTS = --preset $(DUETSCREEN_PRESET)
+DUETSCREEN_CONF_OPTS += -DBUILD_SHARED_LIBS=OFF
 
 # Don't use hashes during development
 BR_NO_CHECK_HASH_FOR += $(DUETSCREEN_SOURCE)
@@ -36,8 +37,8 @@ define DUETSCREEN_INSTALL_TARGET_CMDS
 	install -m644 $(DUETSCREEN_BUILDDIR)/assets/* $(TARGET_DIR)/etc/assets
 	install -m644 $(DUETSCREEN_PKGDIR)/config.json $(TARGET_DIR)/etc/duetscreen.json
 	install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/DuetScreen $(TARGET_DIR)/usr/bin/DuetScreen
-	install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/lib/* $(TARGET_DIR)/usr/lib
-	install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/libraries/lvgl/lib/* $(TARGET_DIR)/usr/lib
+	# install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/lib/*.so $(TARGET_DIR)/usr/lib
+	# install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/libraries/lvgl/lib/*.so $(TARGET_DIR)/usr/lib
 endef
 
 $(eval $(cmake-package))
