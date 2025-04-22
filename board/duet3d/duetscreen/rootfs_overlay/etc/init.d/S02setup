@@ -2,9 +2,11 @@
 
 case "$1" in
 	start)
-		echo -n "Mount boot: "
-		mount /dev/mmcblk0p1 /boot
-		[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		if ! mountpoint -q /boot; then
+			echo -n "Mount boot: "
+			mount /dev/mmcblk0p1 /boot
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
 
 		# Permit rootfs updates using update.tar.gz
 		if [ -f /boot/update.tar.gz ]; then
