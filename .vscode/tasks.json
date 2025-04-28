@@ -68,6 +68,19 @@
             ]
         },
         {
+            "label": "Clean Project",
+            "type": "shell",
+            "command": "rm -rf output dl",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Clean the project"
+        },
+        {
             "label": "Clean DuetScreen",
             "type": "shell",
             "command": "rm -rf output/build/duetscreen-HEAD; rm -rf dl/duetscreen",
