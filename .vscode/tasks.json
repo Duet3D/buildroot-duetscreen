@@ -37,6 +37,20 @@
     ],
     "tasks": [
         {
+            "label": "Save Buildroot Config",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "savedefconfig"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Save Buildroot with the config"
+        },
+        {
             "label": "Configure Buildroot",
             "type": "shell",
             "command": "make",
@@ -90,6 +104,24 @@
             },
             "problemMatcher": [],
             "detail": "Clean the DuetScreen build directory"
+        },
+        {
+            "label": "Reconfigure Linux",
+            "type": "shell",
+            "command": "make linux-reconfigure",
+            "linux": {
+                "options": {
+                    "env": {
+                        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+                    }
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Reconfigure the Linux build"
         },
         {
             "label": "Build Project - WSL",

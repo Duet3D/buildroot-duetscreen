@@ -643,7 +643,7 @@
 	ignore-pm-notify;
 	max-frequency = <150000000>;
 	ctl-spec-caps = <0x8>;
-	status = "okay";
+	status = "disabled";
 };
 
 &sdc2 {
