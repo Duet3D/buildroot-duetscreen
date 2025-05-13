@@ -147,13 +147,13 @@ List of Examples
 
 ---------------------------------------------------------------------
 
-Buildroot 2024.02.10 manual generated on 2025-01-09 13:44:25 UTC from
-git revision c9620ac37e
+Buildroot 2024.02.13 manual generated on 2025-04-22 20:04:25 UTC from
+git revision e687e3815f7
 
 The Buildroot manual is written by the Buildroot developers. It is
 licensed under the GNU General Public License, version 2. Refer to
 the COPYING [http://git.buildroot.org/buildroot/tree/COPYING?id=
-c9620ac37e658d177821be85b4c9484e71e19710] file in the Buildroot
+e687e3815f76c1c5ea9fb52b6558bedfe53ab117] file in the Buildroot
 sources for the full text of this license.
 
 Copyright © The Buildroot developers <>
