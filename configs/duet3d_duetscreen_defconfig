@@ -69,4 +69,6 @@ BR2_TARGET_UBOOT_FORMAT_CUSTOM_NAME="u-boot-sun8iw20p1.bin"
 BR2_TARGET_UBOOT_CUSTOM_DTS_PATH="board/duet3d/duetscreen/dts/uboot/.board-uboot.dts board/duet3d/duetscreen/dts/linux/sun8i-duet3d-duetscreen-linux.dts"
 BR2_PACKAGE_HOST_GENIMAGE=y
 BR2_PACKAGE_HOST_MTOOLS=y
+BR2_PACKAGE_HOST_PYTHON3=y
+BR2_PACKAGE_HOST_PYTHON3_SSL=y
 BR2_PACKAGE_HOST_UBOOT_TOOLS=y
