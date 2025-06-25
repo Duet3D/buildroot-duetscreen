@@ -483,8 +483,8 @@ CONFIG_CMD_PART=y
 # CONFIG_CMD_SAVES is not set
 # CONFIG_CMD_SCSI is not set
 # CONFIG_CMD_SDRAM is not set
-# CONFIG_CMD_SF is not set
-# CONFIG_CMD_SF_TEST is not set
+CONFIG_CMD_SF=y
+CONFIG_CMD_SF_TEST=y
 # CONFIG_CMD_SPI is not set
 # CONFIG_CMD_TSI148 is not set
 # CONFIG_CMD_UNIVERSE is not set
@@ -552,8 +552,8 @@ CONFIG_CMD_FAT=y
 # CONFIG_CMD_FS_UUID is not set
 # CONFIG_CMD_JFFS2 is not set
 CONFIG_CMD_MTDPARTS=y
-CONFIG_MTDIDS_DEFAULT=""
-CONFIG_MTDPARTS_DEFAULT="nand0:40k(boot0),1096k(boot_package),8k(env),8k(env_backup),-(ubi)"
+CONFIG_MTDIDS_DEFAULT="nand0=nand"
+CONFIG_MTDPARTS_DEFAULT="nand:40k(boot0),1096k(boot_package),8k(env),8k(env_backup),-(ubi)"
 # CONFIG_CMD_MTDPARTS_SPREAD is not set
 # CONFIG_CMD_REISER is not set
 # CONFIG_CMD_ZFS is not set
@@ -805,7 +805,31 @@ CONFIG_AW_RAWNAND_SIMULATE_MULTIPLANE=y
 #
 # SPI Flash Support
 #
+CONFIG_SPI_FLASH=y
+CONFIG_SF_DEFAULT_BUS=0
+CONFIG_SF_DEFAULT_CS=0
+CONFIG_SF_DEFAULT_MODE=3
+CONFIG_SF_DEFAULT_SPEED=1000000
 # CONFIG_SPI_SAMP_DL_EN is not set
+# CONFIG_SPI_FLASH_SFDP_SUPPORT is not set
+# CONFIG_SPI_FLASH_BAR is not set
+# CONFIG_SF_DUAL_FLASH is not set
+# CONFIG_SPI_FLASH_ATMEL is not set
+# CONFIG_SPI_FLASH_EON is not set
+# CONFIG_SPI_FLASH_GIGADEVICE is not set
+# CONFIG_SPI_FLASH_ISSI is not set
+# CONFIG_SPI_FLASH_MACRONIX is not set
+# CONFIG_SPI_FLASH_SPANSION is not set
+# CONFIG_SPI_FLASH_STMICRO is not set
+# CONFIG_SPI_FLASH_SST is not set
+CONFIG_SPI_FLASH_WINBOND=y
+# CONFIG_SPI_FLASH_XMC is not set
+# CONFIG_SPI_FLASH_PUYA is not set
+# CONFIG_SPI_FLASH_ZETTA is not set
+# CONFIG_SPI_FLASH_FM is not set
+# CONFIG_SPI_FLASH_XT is not set
+# CONFIG_SPI_FLASH_USE_4K_SECTORS is not set
+# CONFIG_SPI_FLASH_MTD is not set
 
 #
 # UBI support
@@ -887,7 +911,23 @@ CONFIG_SYS_NS16550=y
 #
 # Allwinner Soc Audio support
 #
-# CONFIG_SPI is not set
+CONFIG_SPI=y
+CONFIG_SPI_MEM=y
+# CONFIG_SOFT_SPI is not set
+# CONFIG_CF_SPI is not set
+# CONFIG_FSL_ESPI is not set
+# CONFIG_FSL_QSPI is not set
+# CONFIG_SH_SPI is not set
+# CONFIG_SH_QSPI is not set
+# CONFIG_TI_QSPI is not set
+# CONFIG_KIRKWOOD_SPI is not set
+# CONFIG_LPC32XX_SSP is not set
+# CONFIG_MPC8XXX_SPI is not set
+# CONFIG_MXC_SPI is not set
+# CONFIG_MXS_SPI is not set
+# CONFIG_OMAP3_SPI is not set
+CONFIG_SUNXI_SPI=y
+# CONFIG_SPI_USE_DMA is not set
 
 #
 # SPMI support
