@@ -1,4 +1,7 @@
 #!/bin/sh
+
+echo "=================================> ARGS = $argv"
+
 BOARD_COMMON_DIR="$(dirname $0)/../../../allwinner-generic/$4"
 BOARD_DIR="$(dirname $0)/.."
 
@@ -25,6 +28,12 @@ rm -f "$TARGET_DIR/lib/dhcpcd/dhcpcd-hooks/50-timesyncd.conf"
 cd $BINARIES_DIR
 echo "item=dtb, $5" >> boot_package.cfg
 $BINARIES_DIR/dragonsecboot -pack boot_package.cfg
+
+# Make boot bundle for SPINAND
+dd if=/dev/zero of=boot-bundle.img bs=1024 count=1152
+dd if=boot0_nand.fex of=boot-bundle.img
+dd if=boot_package.fex of=boot-bundle.img bs=1024 seek=40
+# TODO: Add env/env-backup to seek=1136 + 1144
 
 # Make uImage
 mkimage -A arm -O linux -T kernel -C none -a 0x40008000 -n "Linux kernel" -d zImage uImage
