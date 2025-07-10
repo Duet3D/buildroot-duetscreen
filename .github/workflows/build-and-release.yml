@@ -1,0 +1,46 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.PAT }}
+
+      - name: Configure Git
+        run: |
+          git config --global url."https://${PAT}@github.com/".insteadOf "https://github.com/"
+        env:
+          PAT: ${{ secrets.PAT }}
+
+      - name: Install Dependencies
+        run: |
+          ./scripts/install_prerequisites.sh
+
+      - name: Configure
+        run: make duet3d_duetscreen_sd_defconfig
+
+      - name: Build
+        run: make
+        env:
+          GIT_TERMINAL_PROMPT: 0
+
+      - name: Generate Release Notes
+        run: ./scripts/release_notes.sh > RELEASE_NOTES.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: output/images/sdcard.img
+          body_path: RELEASE_NOTES.md
+          token: ${{ secrets.PAT }}
