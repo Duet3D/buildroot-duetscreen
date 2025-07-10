@@ -45,5 +45,5 @@ mkimage -A arm -O linux -T kernel -C none -a 0x40008000 -n "Linux kernel" -d zIm
 #mkbootimg --kernel zImage --ramdisk ramdisk.img --board sun8iw20p1 --base 0x40200000 --kernel_offset 0x0 --ramdisk_offset 0x01000000 -o boot.img
 
 # Make bootable image (without ramdisk)
-mkbootimg --kernel zImage --board sun8iw20p1 --base 0x40000000 -o boot.img
+# mkbootimg --kernel zImage --board sun8iw20p1 --base 0x40000000 -o boot.img
 
