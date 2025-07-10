@@ -55,7 +55,7 @@
             "type": "shell",
             "command": "make",
             "args": [
-                "duet3d_duetscreen_defconfig"
+                "duet3d_duetscreen_sd_defconfig"
             ],
             "group": {
                 "kind": "build",
