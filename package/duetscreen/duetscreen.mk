@@ -42,7 +42,7 @@ define DUETSCREEN_INSTALL_TARGET_CMDS
 	install -d -m755 $(TARGET_DIR)/opt/DuetScreen
 	rm -rf $(TARGET_DIR)/etc/assets
 	mkdir -p $(TARGET_DIR)/etc/assets
-	install -m644 $(DUETSCREEN_BUILDDIR)/assets/* $(TARGET_DIR)/etc/assets
+	rsync -a --chmod=F644,D755 $(DUETSCREEN_BUILDDIR)/assets/ $(TARGET_DIR)/etc/assets/
 	install -m644 $(DUETSCREEN_PKGDIR)/config.json $(TARGET_DIR)/etc/duetscreen.json
 	install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/DuetScreen $(TARGET_DIR)/usr/bin/DuetScreen
 	# install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/lib/*.so $(TARGET_DIR)/usr/lib
