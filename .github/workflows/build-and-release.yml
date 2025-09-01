@@ -3,7 +3,7 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   build:
@@ -35,12 +35,40 @@ jobs:
         env:
           GIT_TERMINAL_PROMPT: 0
 
-      - name: Generate Release Notes
-        run: ./scripts/release_notes.sh > RELEASE_NOTES.md
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          ./scripts/release_notes.sh | tee -a $GITHUB_ENV >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Prepare artifacts
+        shell: bash
+        run: |
+          mkdir artifacts
+          cp ./output/images/sdcard.img ./artifacts/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildroot-duetscreen
+          path: artifacts/*
+
+      - name: Check Branch
+        working-directory: DuetScreen
+        id: check_branch
+        run: |
+          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+          echo "IS_MASTER=$([[ "$BRANCH_NAME" == "master" ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: output/images/sdcard.img
-          body_path: RELEASE_NOTES.md
-          token: ${{ secrets.PAT }}
+          files: artifacts/*
+          body: ${{ steps.changelog.outputs.CHANGELOG }}
+          prerelease: ${{ steps.check_branch.outputs.IS_MASTER != 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
