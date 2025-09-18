@@ -14,10 +14,12 @@ DUETSCREEN_OVERRIDE_SRCDIR_RSYNC_EXCLUSIONS = \
 	--exclude libraries/lvgl/tests \
 	--exclude out/ \
 	--exclude node_modules/
+DUETSCREEN_GET_VERSION_CMD = echo dev
 else
 DUETSCREEN_SITE = git@github.com:Duet3D/duetscreen.git
 DUETSCREEN_SITE_METHOD = git
 DUETSCREEN_GIT_SUBMODULES = YES
+DUETSCREEN_GET_VERSION_CMD = GIT_DIR=$(BR2_DL_DIR)/duetscreen/git/.git git tag -l | tail -n 1
 endif
 DUETSCREEN_LICENSE = MIT
 DUETSCREEN_LICENSE_FILES = license.txt
@@ -34,6 +36,8 @@ BR_NO_CHECK_HASH_FOR += $(DUETSCREEN_SOURCE)
 
 # cmake-package build does not cd into the src directory unlike the configure step...
 define DUETSCREEN_BUILD_CMDS
+	cd $(@D); \
+	./scripts/update_version.sh "$$($(DUETSCREEN_GET_VERSION_CMD))"
 	cd $(@D); \
 	$(TARGET_MAKE_ENV) $(DUETSCREEN_BUILD_ENV) $(BR2_CMAKE) --build --preset $(DUETSCREEN_PRESET) -j$(PARALLEL_JOBS) $(DUETSCREEN_BUILD_OPTS)
 endef
