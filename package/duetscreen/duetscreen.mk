@@ -5,21 +5,22 @@
 ################################################################################
 
 DUETSCREEN_VERSION = HEAD
+
 ifdef DUETSCREEN_SRC
 DUETSCREEN_SITE = $(DUETSCREEN_SRC)
 DUETSCREEN_SITE_METHOD = local
 DUETSCREEN_OVERRIDE_SRCDIR_RSYNC_EXCLUSIONS = \
-	--exclude .vscode/ \
+	--include .git \
 	--exclude libraries/lvgl/build \
-	--exclude libraries/lvgl/tests \
+	--exclude libraries/lvgl/tests/build* \
 	--exclude out/ \
 	--exclude node_modules/
-DUETSCREEN_GET_VERSION_CMD = echo dev
+DUETSCREEN_GET_VERSION_CMD = git describe --tags --dirty --always --match="v*"
 else
 DUETSCREEN_SITE = git@github.com:Duet3D/duetscreen.git
 DUETSCREEN_SITE_METHOD = git
 DUETSCREEN_GIT_SUBMODULES = YES
-DUETSCREEN_GET_VERSION_CMD = GIT_DIR=$(BR2_DL_DIR)/duetscreen/git/.git git tag -l | tail -n 1
+DUETSCREEN_GET_VERSION_CMD = GIT_DIR=$(BR2_DL_DIR)/duetscreen/git/.git git describe --tags --dirty --always --match="v*" # This doesn't set the version correctly but this workflow isn't used so it doesn't really matter
 endif
 DUETSCREEN_LICENSE = MIT
 DUETSCREEN_LICENSE_FILES = license.txt
@@ -29,6 +30,7 @@ ifndef DUETSCREEN_PRESET
 DUETSCREEN_PRESET = T113
 endif
 DUETSCREEN_CONF_OPTS = --preset $(DUETSCREEN_PRESET)
+# DUETSCREEN_CONF_OPTS += -DHARDWARE_TEST=ON
 DUETSCREEN_CONF_OPTS += -DBUILD_SHARED_LIBS=OFF
 
 # Don't use hashes during development
@@ -47,7 +49,6 @@ define DUETSCREEN_INSTALL_TARGET_CMDS
 	rm -rf $(TARGET_DIR)/etc/assets
 	mkdir -p $(TARGET_DIR)/etc/assets
 	rsync -a --chmod=F644,D755 $(DUETSCREEN_BUILDDIR)/assets/ $(TARGET_DIR)/etc/assets/
-	install -m644 $(DUETSCREEN_PKGDIR)/config.json $(TARGET_DIR)/etc/duetscreen.json
 	install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/DuetScreen $(TARGET_DIR)/usr/bin/DuetScreen
 	# install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/lib/*.so $(TARGET_DIR)/usr/lib
 	# install -m755 $(DUETSCREEN_BUILDDIR)/out/build/$(DUETSCREEN_PRESET)/libraries/lvgl/lib/*.so $(TARGET_DIR)/usr/lib
