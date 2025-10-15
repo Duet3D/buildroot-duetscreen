@@ -1,0 +1,56 @@
+#!/bin/sh
+
+UPGRADE_FILE="update.tar.gz"
+
+function do_upgrade() {
+	FILE = $1
+
+	# Run pre-update if applicable
+	gunzip -c $FILE | tar -xvC / pre-update || true
+	if [ -f /pre-update ]; then
+		/pre-update $FILE
+		rm /pre-update
+	fi
+
+	# Extract everything but pre-update script over rootfs
+	gunzip $FILE -c | tar -xvC / -X pre-update && rm -f $FILE
+
+	# Run post-update if applicable
+	if [ -f /post-update ]; then
+		/post-update
+		rm /post-update
+	fi
+}
+
+case "$1" in
+	start)
+		# Check for update file in /boot and install it if present
+		if [ -f "/boot/$UPGRADE_FILE" ]; then
+			echo -n "Found $UPGRADE_FILE on /boot, installing... "
+			do_upgrade "/boot/$UPGRADE_FILE" 
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
+
+		# Keep checking for updates on USB drives 
+		while true; do
+			for MOUNT_POINT in $(echo /media/usb[0-7] 2>/dev/null); do
+				if mountpoint -q "$MOUNT_POINT"; then
+					if [ -f "$MOUNT_POINT/$UPGRADE_FILE" ]; then
+                        echo -n "Found $UPGRADE_FILE on $MOUNT_POINT, installing... "
+						do_upgrade "$MOUNT_POINT/$UPGRADE_FILE"
+						[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+					fi
+				fi
+			done
+			sleep 2
+		done &
+		;;
+	stop)
+		killall S03rootfs-upgrade
+		;;
+	*)
+		echo "Usage: $0 start" >&2
+		exit 1
+		;;
+esac
+

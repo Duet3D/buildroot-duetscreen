@@ -31,8 +31,8 @@ $BINARIES_DIR/dragonsecboot -pack boot_package.cfg
 
 # Make boot bundle for SPINAND
 dd if=/dev/zero of=boot-bundle.img bs=1024 count=1152
-dd if=boot0_nand.fex of=boot-bundle.img
-dd if=boot_package.fex of=boot-bundle.img bs=1024 seek=40
+dd if=boot0_nand.fex of=boot-bundle.img conv=notrunc
+dd if=boot_package.fex of=boot-bundle.img seek=40 conv=notrunc
 # TODO: Add env/env-backup to seek=1136 + 1144
 
 # Make uImage
