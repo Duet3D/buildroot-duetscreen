@@ -3,20 +3,22 @@
 UPGRADE_FILE="update.tar.gz"
 
 function do_upgrade() {
-	FILE = $1
+	FILE="$1"
 
 	# Run pre-update if applicable
-	gunzip -c $FILE | tar -xvC / pre-update || true
+	gunzip -c $FILE | tar -xvC / pre-update &> /dev/null || true
 	if [ -f /pre-update ]; then
+		chmod +x /pre-update
 		/pre-update $FILE
-		rm /pre-update
 	fi
 
-	# Extract everything but pre-update script over rootfs
-	gunzip $FILE -c | tar -xvC / -X pre-update && rm -f $FILE
+	# Extract everything over rootfs and delete pre-update if needed
+	gunzip $FILE -c | tar -xvC / > /dev/null && rm -f $FILE
+	rm -f /pre-update
 
 	# Run post-update if applicable
 	if [ -f /post-update ]; then
+		chmod +x /post-update
 		/post-update
 		rm /post-update
 	fi

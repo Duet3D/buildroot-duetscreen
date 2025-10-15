@@ -14,7 +14,7 @@ case "$1" in
 			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
 		fi
 
-		# Change root password via /boot/password(.txt)
+		# Change root password via /boot/password(.txt) or lock root account
 		PW_FILE=""
 		if [ -f /boot/password ]; then
 			PW_FILE="/boot/password"
@@ -61,7 +61,7 @@ case "$1" in
 		if [ -f /boot/adb ]; then
 			echo -n "Enabling ADB... "
 			mv /etc/init.d/30adbd /etc/init.d/S30adbd
-			/etc/init.d/S30adbd start
+			/etc/init.d/S30adbd start > /dev/null
 			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
 		fi
 
@@ -69,7 +69,14 @@ case "$1" in
 		if [ -f /boot/ssh ] && [ ! -f /etc/init.d/S50dropbear ]; then
 			echo -n "Enabling SSH... "
 			mv /etc/init.d/50dropbear /etc/init.d/S50dropbear
-			/etc/init.d/S50dropbear start
+			/etc/init.d/S50dropbear start > /dev/null
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
+
+		# Enable getty console if required
+		if [ -f /boot/getty ] && [ -f /etc/inittab.getty ]; then
+			echo -n "Enabling getty on console... "
+			mv /etc/inittab.getty /etc/inittab
 			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
 		fi
 

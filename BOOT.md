@@ -12,8 +12,9 @@ Here you can find a list of the mentioend boot options and their implications:
 In order to set up WiFi, create file `wpa_supplicant.conf` with your WiFi data. Example:
 
 ```
-update_config=1
 ctrl_interface=/var/run/wpa_supplicant
+update_config=1
+ap_scan=1
 
 network={
     scan_ssid=1
@@ -67,4 +68,8 @@ To do this, create a file called `adb` on the boot partition. Note that ADB does
 
 Bear in mind that **either** ADB **or** WiFi can be active because the USB port is shared among the two.
 In order to use ADB, put the screen in `USB device` mode.
+
+### UART
+
+In order to enable UART console access on the debug port, create a file `getty` on the first boot partition.
 
