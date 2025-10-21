@@ -58,7 +58,6 @@ jobs:
     #       path: artifacts/*
 
       - name: Check Branch
-        working-directory: DuetScreen
         id: check_branch
         run: |
           BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
