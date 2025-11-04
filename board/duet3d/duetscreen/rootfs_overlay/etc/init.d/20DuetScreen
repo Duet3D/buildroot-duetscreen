@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# This init script is only used to start/stop the DuetScreen application for development purposes.
+# S21DuetScreenMonitor is used in normal operation to restart DuetScreen if it crashes.
+
 DAEMON=/usr/bin/DuetScreen
 DAEMON_OPTS=""
 NAME=DuetScreen
