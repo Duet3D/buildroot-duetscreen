@@ -87,6 +87,13 @@ case "$1" in
 			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
 		fi
 
+		# Copy screen settings
+		if [ -f /boot/duetscreen.json ]; then
+			echo -n "Found duetscreen.json on /boot, copying... "
+			cp /boot/duetscreen.json /etc/duetscreen.json
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
+
 		;;
 	stop)
 		;;
