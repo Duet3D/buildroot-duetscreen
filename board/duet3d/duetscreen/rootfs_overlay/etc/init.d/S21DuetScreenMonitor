@@ -10,11 +10,15 @@ PIDFILE=/var/run/$NAME.pid
 APP="/usr/bin/DuetScreen"
 LOG_FILE="/var/log/duetscreen-monitor.log"
 TAG="DuetScreen-monitor"
+APP_LOG="/var/log/DuetScreen.log"
+APP_LOG_LINES=${APP_LOG_LINES:-50}
 
 # Watchdog file: if stale, force-restart the app
 WATCHDOG_FILE="${WATCHDOG_FILE:-/tmp/duetscreen-watchdog}"
 # Seconds; if 0 or negative, watchdog check is disabled
 WATCHDOG_TIMEOUT="${WATCHDOG_TIMEOUT:-5}"
+# Flag file indicating the last stop was due to watchdog staleness
+STALE_FLAG="${STALE_FLAG:-/tmp/duetscreen-stale.flag}"
 
 # Optional tuning via environment variables (defaults favor immediate restarts)
 MIN_UPTIME="${MIN_UPTIME:-0}"
@@ -33,6 +37,22 @@ log_msg() {
 		logger -t "$TAG" -- "$*"
 	fi
 	printf '%s\n' "$msg" >> "$LOG_FILE" 2>/dev/null || true
+}
+
+# Append the last 50 lines of the DuetScreen application log to the monitor log.
+# Avoid spamming syslog by writing directly to LOG_FILE with clear markers.
+dump_duetscreen_log() {
+	cause="$1"
+	ts="$(date -Iseconds 2>/dev/null || date '+%Y-%m-%dT%H:%M:%S%z')"
+	if [ -r "$APP_LOG" ]; then
+		{
+			printf '%s %s\n' "$ts" "---- DuetScreen.log tail (last ${APP_LOG_LINES} lines) before restart; cause=${cause} ----"
+			tail -n "$APP_LOG_LINES" "$APP_LOG" 2>/dev/null || true
+			printf '%s %s\n' "$ts" "---- End DuetScreen.log tail ----"
+		} >> "$LOG_FILE" 2>/dev/null || true
+	else
+		printf '%s %s\n' "$ts" "---- DuetScreen.log missing or unreadable before restart; cause=${cause} ----" >> "$LOG_FILE" 2>/dev/null || true
+	fi
 }
 
 run_monitor() {
@@ -94,6 +114,8 @@ run_monitor() {
 							age=$((now - mtime))
 							if [ "$age" -gt "$WATCHDOG_TIMEOUT" ] 2>/dev/null; then
 								log_msg "Watchdog stale: $WATCHDOG_FILE age=${age}s > ${WATCHDOG_TIMEOUT}s; restarting DuetScreen"
+								# Mark stale cause so parent can dump logs even if the app exits with code 0
+								touch "$STALE_FLAG" 2>/dev/null || true
 								# Ask the child to terminate; the main loop's wait will observe exit
 								kill -TERM "$child_pid" 2>/dev/null || true
 								# Give a brief moment between checks to avoid tight loop
@@ -137,9 +159,23 @@ run_monitor() {
 			reason="exited with code $status"
 		fi
 
-		# Log crashes and exits
+		# Determine if restart is due to watchdog staleness
+		was_stale=0
+		if [ -e "$STALE_FLAG" ]; then
+			was_stale=1
+			# Clear the flag for next iteration
+			rm -f "$STALE_FLAG" 2>/dev/null || true
+		fi
+
+		# Log crashes, stale restarts, and clean exits
 		if [ "$status" -ne 0 ]; then
 			log_msg "DuetScreen crashed: $reason; uptime=${runtime}s; restart_count=$restart_count"
+			# Before attempting a restart, capture the recent DuetScreen application log
+			dump_duetscreen_log "$reason"
+		elif [ "$was_stale" -eq 1 ]; then
+			log_msg "DuetScreen restart due to stale watchdog; uptime=${runtime}s; restart_count=$restart_count"
+			# Capture the recent DuetScreen application log before restarting even if exit was clean
+			dump_duetscreen_log "watchdog-stale"
 		else
 			log_msg "DuetScreen exited cleanly; uptime=${runtime}s; restarting"
 		fi
