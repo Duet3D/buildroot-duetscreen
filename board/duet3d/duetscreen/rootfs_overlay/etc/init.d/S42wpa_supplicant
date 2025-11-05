@@ -4,12 +4,12 @@ DAEMON=/usr/sbin/wpa_supplicant
 DAEMON_OPTS="-B -i wlan0 -c /etc/wpa_supplicant.conf"
 NAME=wpa_supplicant
 PIDFILE=/var/run/$NAME.pid
+MAX_WAIT=10
 
 start() {
 	echo "Starting $NAME..."
-	while true; do
+	for i in $(seq 1 $MAX_WAIT); do
 		if [ -d /sys/class/net/wlan0 ]; then
-			echo "wlan0 interface found."
 			break
 		fi
 		sleep 1
