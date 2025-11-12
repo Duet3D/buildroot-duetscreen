@@ -4,7 +4,7 @@
 
 /dts-v1/;
 
- /* optee used 7MB: SHM 2M: OS: 1M: TA:4M*/
+/* optee used 7MB: SHM 2M: OS: 1M: TA:4M*/
 /memreserve/ 0x41900000 0x00100000;
 /* DSP used 1MB */
 /* /memreserve/ 0x42000000 0x00100000; */
@@ -14,6 +14,11 @@
 /{
 	model = "sun8iw20";
 	compatible = "allwinner,r528", "arm,sun8iw20p1";
+
+	chosen {
+		/* This is automatically overwritten by u-boot, only for NAND */
+		bootargs = "earlyprintk=sunxi-uart,0x02500C00 clk_ignore_unused initcall_debug=0 console=ttyS3,115200 loglevel=8 root=/dev/mmcblk0p2 cma=8M androidboot.mode=normal androidboot.hardware=sun8iw20p1 boot_type=1 androidboot.boot_type=1 gpt=1 disp_reserve=2457600,0x43efa000 androidboot.dramsize=128";
+	};
 
 	reg_vdd_cpu: vdd-cpu {
 		compatible = "sunxi-pwm-regulator";
@@ -765,12 +770,16 @@
 				reg = <0x40000 0x40000>;
 			};
 			partition@80000 {
-				label = "kernel";
-				reg = <0x80000 0x400000>;
+				label = "optee";
+				reg = <0x80000 0x80000>;
 			};
-			partition@C0000 {
+			partition@100000 {
+				label = "kernel";
+				reg = <0x100000 0x400000>;
+			};
+			partition@500000 {
 				label = "ubi";
-				reg = <0x480000 0xFB80000>;
+				reg = <0x500000 0xFB00000>;
 			};
 		};
 	};
