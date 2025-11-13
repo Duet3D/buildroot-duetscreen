@@ -2,16 +2,14 @@
 
 case "$1" in
 	start)
+		if [ -f /etc/splash.png ]; then
+			ffmpeg -i /etc/splash.png -f rawvideo -pix_fmt bgra -y /dev/fb0 > /dev/null
+		fi
+
 		if ! mountpoint -q /boot && [ -b /dev/mmcblk0p1 ]; then
 			echo -n "Mount boot: "
 			mount /dev/mmcblk0p1 /boot
 			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
-		fi
-
-		if [ -f /etc/bootlogo.raw ]; then
-			# Use this to generate custom splash images:
-			# ffmpeg -i bootlogo.png -f rawvideo -pix_fmt bgra /etc/bootlogo.raw
-			cat /etc/bootlogo.raw > /dev/fb0
 		fi
 		;;
 	stop)
