@@ -12,8 +12,8 @@
 #include "sun8iw20p1.dtsi"
 
 /{
-	model = "sun8iw20";
-	compatible = "allwinner,r528", "arm,sun8iw20p1";
+	model = "Duet3D DuetScreen";
+	compatible = "allwinner,sun8iw20p1", "allwinner,r528";
 
 	chosen {
 		/* This is automatically overwritten when booting from SD, only for NAND */

@@ -2,7 +2,7 @@
 
 case "$1" in
 	start)
-		if ! mountpoint -q /boot; then
+		if ! mountpoint -q /boot && [ -b /dev/mmcblk0p1 ]; then
 			echo -n "Mount boot: "
 			mount /dev/mmcblk0p1 /boot
 			[ $? -eq 0 ] && echo "OK" || echo "ERROR"

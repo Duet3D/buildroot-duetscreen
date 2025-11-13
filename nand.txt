@@ -1,9 +1,0 @@
-2Gbit/256MiB NAND
-
-- 0x00000000 - 0x00120000 => BOOT (0x00240000 bytes, 1152KiB, 576 blocks)
-  - 0x00000000 - 0x00009FFF => BOOT0 (0xA000 bytes, 40KiB, 20 blocks)
-  - 0x0000A000 - 0x0011BFFF => BOOT_PACKAGE (0x231FFF bytes, 1096KiB, 548 blocks)
-  - 0x0011C000 - 0x0011DFFF => ENV (0x2000 bytes, 8KiB, 4 blocks)
-  - 0x0011E000 - 0x0011FFFF => ENV_BACKUP (0x2000 bytes, 8KiB, 4 blocks)
-- 0x00240000 - 0x1023FFFF => UBI (0xFDC0000 bytes, 259840KiB, 129920 blocks)
-
