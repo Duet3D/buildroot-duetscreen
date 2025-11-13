@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# Blank the screen first
+# FIXME: Use ffmpeg to write an almost black image. Without this the display freezes and fades away
+echo 0 > /sys/class/vtconsole/vtcon0/bind
+ffmpeg -loglevel quiet -f lavfi -i color=0x010101:s=1024x600 -f rawvideo -pix_fmt bgra -y /dev/fb0
+echo 1 > /sys/class/vtconsole/vtcon0/bind
+echo -ne '\033c' > /dev/tty1
+
+# Begin NAND factory reset
+echo 'NAND Factory Reset' > /dev/tty1
+echo > /dev/tty1
+
+echo "Erasing NAND flash..." > /dev/tty1
+flash_erase /dev/mtd0 0 0 > /dev/null
+flash_erase /dev/mtd1 0 0 > /dev/null
+flash_erase /dev/mtd2 0 0 > /dev/null
+flash_erase /dev/mtd3 0 0 > /dev/null
+# mtd4 is erased by ubiformat
+
+echo "Flashing awboot..." > /dev/tty1
+nandwrite -p /dev/mtd0 awboot-boot-spi.bin > /dev/null
+echo "Flashing dtb..." > /dev/tty1
+nandwrite -p /dev/mtd1 sun8i-duet3d-duetscreen-linux.dtb > /dev/null
+echo "Flashing optee..." > /dev/tty1
+nandwrite -p /dev/mtd2 optee.bin > /dev/null
+echo "Flashing kernel..." > /dev/tty1
+nandwrite -p /dev/mtd3 zImage > /dev/null
+echo "Flashing ubi..." > /dev/tty1
+ubiformat /dev/mtd4 --flash-image=rootfs.ubi > /dev/tty1
+
+echo "Done!" > /dev/tty1

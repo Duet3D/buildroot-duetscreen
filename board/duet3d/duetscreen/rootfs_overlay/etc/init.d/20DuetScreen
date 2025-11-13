@@ -10,6 +10,7 @@ PIDFILE=/var/run/$NAME.pid
 
 start() {
 	echo -n "Starting $NAME: "
+	echo 0 > /sys/class/vtconsole/vtcon1/bind
 	start-stop-daemon -S -b -q -p $PIDFILE -m -x $DAEMON -- $DAEMON_OPTS
 	[ $? -eq 0 ] && echo "OK" || echo "ERROR"
 }
@@ -17,6 +18,7 @@ start() {
 stop() {
 	echo -n "Stopping $NAME: "
 	start-stop-daemon -K -q -p $PIDFILE
+	echo 1 > /sys/class/vtconsole/vtcon1/bind
 	[ $? -eq 0 ] && echo "OK" || echo "ERROR"
 }
 
