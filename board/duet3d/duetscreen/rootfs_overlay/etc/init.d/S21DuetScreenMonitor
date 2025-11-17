@@ -220,7 +220,6 @@ run_monitor() {
 start() {
 	echo -n "Starting $NAME: "
 	echo 0 > /sys/class/vtconsole/vtcon1/bind
-	# Run this script in 'run' mode under start-stop-daemon so it backgrounds and manages its own pidfile
 	start-stop-daemon -S -b -q -p "$PIDFILE" -m -x "$0" -- run
 	[ $? -eq 0 ] && echo "OK" || echo "ERROR"
 }
@@ -229,7 +228,7 @@ stop() {
 	echo -n "Stopping $NAME: "
 	start-stop-daemon -K -q -p "$PIDFILE" --retry=TERM/5/KILL/2
 	[ $? -eq 0 ] && echo "OK" || echo "ERROR"
-	echo 1 > /sys/class/vtconsole/vtcon1/bind
+	ffmpeg -loglevel quiet -i /etc/splash.png -f rawvideo -pix_fmt bgra -y /dev/fb0 > /dev/null
 }
 
 restart() {

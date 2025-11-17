@@ -18,7 +18,7 @@ start() {
 stop() {
 	echo -n "Stopping $NAME: "
 	start-stop-daemon -K -q -p $PIDFILE
-	echo 1 > /sys/class/vtconsole/vtcon1/bind
+	ffmpeg -loglevel quiet -i /etc/splash.png -f rawvideo -pix_fmt bgra -y /dev/fb0 > /dev/null
 	[ $? -eq 0 ] && echo "OK" || echo "ERROR"
 }
 
