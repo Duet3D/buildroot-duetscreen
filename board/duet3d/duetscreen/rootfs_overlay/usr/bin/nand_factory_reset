@@ -2,9 +2,9 @@
 
 # Blank the screen first
 # FIXME: Use ffmpeg to write an almost black image. Without this the display freezes and fades away
-echo 0 > /sys/class/vtconsole/vtcon0/bind
+echo 0 > /sys/class/vtconsole/vtcon1/bind
 ffmpeg -loglevel quiet -f lavfi -i color=0x010101:s=1024x600 -f rawvideo -pix_fmt bgra -y /dev/fb0
-echo 1 > /sys/class/vtconsole/vtcon0/bind
+echo 1 > /sys/class/vtconsole/vtcon1/bind
 echo -ne '\033c' > /dev/tty1
 
 # Begin NAND factory reset
