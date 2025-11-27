@@ -1,5 +1,12 @@
 #!/bin/sh
 
+# Only permit update if running from SD card
+if [ -z "$(cat /proc/mounts | grep ' / ext4 ')" ]; then
+    echo "Not using ext4 partition, skipping update"
+    rm -f awboot-boot-spi.bin sun8i-duet3d-duetscreen-linux.dtb optee.bin zImage rootfs.ubi post-update
+    exit 0
+fi
+
 # Stop DuetScreen first
 /etc/init.d/S21DuetScreenMonitor stop
 
