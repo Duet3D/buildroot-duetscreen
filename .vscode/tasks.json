@@ -167,7 +167,7 @@
             "type": "shell",
             "command": "make",
             "args": [
-                "duetscreen-rebuild"
+                "duetscreen-reconfigure"
             ],
             "options": {
                 "env": {
@@ -186,7 +186,7 @@
         {
             "label": "Build DuetScreen - Local",
             "type": "shell",
-            "command": "source ${workspaceFolder}/.vscode/.env; make duetscreen-rebuild",
+            "command": "source ${workspaceFolder}/.vscode/.env; make duetscreen-reconfigure",
             "args": [],
             "options": {
                 "env": {
