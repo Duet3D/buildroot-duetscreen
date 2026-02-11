@@ -29,6 +29,17 @@ RESTART_LIMIT="${RESTART_LIMIT:-0}"
 mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
 touch "$LOG_FILE" 2>/dev/null || true
 
+# Read monotonic seconds from /proc/uptime (immune to wall-clock changes).
+# Falls back to wall clock if /proc/uptime is unavailable.
+get_monotonic_secs() {
+	if [ -r /proc/uptime ]; then
+		read _up _ < /proc/uptime 2>/dev/null
+		echo "${_up%%.*}"
+	else
+		date +%s 2>/dev/null || echo 0
+	fi
+}
+
 log_msg() {
 	# Prefer syslog via logger if available, always append to LOG_FILE too
 	ts="$(date -Iseconds 2>/dev/null || date '+%Y-%m-%dT%H:%M:%S%z')"
@@ -101,17 +112,28 @@ run_monitor() {
 		# and gracefully restarts the child if the file is stale.
 		if [ "$WATCHDOG_TIMEOUT" -gt 0 ] 2>/dev/null; then
 			(
+				# Use monotonic time to track staleness so that wall-clock changes
+				# (e.g. NTP sync) do not cause false watchdog restarts.
+				# We detect the app touching the file by comparing its mtime against
+				# the last seen mtime, then measure elapsed time monotonically.
+				_last_seen_mtime="$(date -r "$WATCHDOG_FILE" +%s 2>/dev/null || echo 0)"
+				_last_touch_mono="$(get_monotonic_secs)"
+
 				# Subshell loop ends automatically when child exits
 				while kill -0 "$child_pid" 2>/dev/null; do
 					# Only check if the file exists; if it's not present, skip to avoid
 					# false restarts on initial startup or systems that don't use the file.
 					if [ -e "$WATCHDOG_FILE" ]; then
-						now=$(date +%s 2>/dev/null || echo 0)
-						# Use BusyBox-compatible way to read mtime; fall back to 0 on error
-						mtime=$(date -r "$WATCHDOG_FILE" +%s 2>/dev/null || echo 0)
-						# Ensure numeric comparison (guard if mtime failed)
-						if [ "$mtime" -gt 0 ] 2>/dev/null; then
-							age=$((now - mtime))
+						_cur_mtime="$(date -r "$WATCHDOG_FILE" +%s 2>/dev/null || echo 0)"
+						_mono_now="$(get_monotonic_secs)"
+
+						if [ "$_cur_mtime" != "$_last_seen_mtime" ]; then
+							# App touched the file — reset monotonic baseline
+							_last_seen_mtime="$_cur_mtime"
+							_last_touch_mono="$_mono_now"
+						else
+							# mtime unchanged — check staleness with monotonic clock
+							age=$((_mono_now - _last_touch_mono))
 							if [ "$age" -gt "$WATCHDOG_TIMEOUT" ] 2>/dev/null; then
 								log_msg "Watchdog stale: $WATCHDOG_FILE age=${age}s > ${WATCHDOG_TIMEOUT}s; restarting DuetScreen"
 								# Mark stale cause so parent can dump logs even if the app exits with code 0
