@@ -3,6 +3,58 @@
 UPGRADE_FILE="update.tar.gz"
 PIDFILE="/var/run/S50rootfs-upgrade.pid"
 
+
+# Version check function (robust BusyBox tar extraction)
+check_version() {
+	ROOTFS_VERSION_FILE="/etc/buildroot_version"
+	UPDATE_VERSION_FILE="/tmp/update_buildroot_version"
+	FEEDBACK_FILE="/tmp/rootfs_upgrade_failed"
+	PATCH_WARNING_FILE="/tmp/rootfs_upgrade_patch_warning"
+	UPDATE_TAR="$1"
+
+	# Try to extract buildroot_version (with or without ./ prefix)
+	gunzip -c "$UPDATE_TAR" | tar -xOf - buildroot_version 2>/dev/null > "$UPDATE_VERSION_FILE"
+	if [ ! -s "$UPDATE_VERSION_FILE" ]; then
+		gunzip -c "$UPDATE_TAR" | tar -xOf - ./buildroot_version 2>/dev/null > "$UPDATE_VERSION_FILE"
+	fi
+	if [ ! -s "$UPDATE_VERSION_FILE" ]; then
+		echo "Failed to extract buildroot_version from update package '$UPDATE_TAR', skipping version check."
+		rm -f "$UPDATE_VERSION_FILE"
+		return 0
+	fi
+
+	if [ ! -f "$ROOTFS_VERSION_FILE" ]; then
+		echo "Buildroot version file missing, skipping check."
+		return 0
+	fi
+
+	ROOTFS_VERSION=$(cat "$ROOTFS_VERSION_FILE" | tr -d '\r\n')
+	UPDATE_VERSION=$(cat "$UPDATE_VERSION_FILE" | tr -d '\r\n')
+
+	echo "Current rootfs version: $ROOTFS_VERSION, update version: $UPDATE_VERSION"
+
+	# Compare major.minor, ignore patch if not present
+	ROOTFS_BASE=$(echo "$ROOTFS_VERSION" | cut -d. -f1,2)
+	UPDATE_BASE=$(echo "$UPDATE_VERSION" | cut -d. -f1,2)
+
+	if [ "$ROOTFS_BASE" != "$UPDATE_BASE" ]; then
+		echo "Version mismatch: rootfs $ROOTFS_VERSION, update $UPDATE_VERSION" > "$FEEDBACK_FILE"
+		rm -f "$PATCH_WARNING_FILE"
+		return 1
+	fi
+
+	# Always check patch version, but do not block upgrade
+	ROOTFS_PATCH=$(echo "$ROOTFS_VERSION" | cut -d. -f3)
+	UPDATE_PATCH=$(echo "$UPDATE_VERSION" | cut -d. -f3)
+	if [ -n "$ROOTFS_PATCH" ] && [ -n "$UPDATE_PATCH" ] && [ "$ROOTFS_PATCH" != "$UPDATE_PATCH" ]; then
+		echo "Patch version differs: rootfs $ROOTFS_VERSION, update $UPDATE_VERSION" > "$PATCH_WARNING_FILE"
+	else
+		rm -f "$PATCH_WARNING_FILE"
+	fi
+	rm -f "$FEEDBACK_FILE"
+	return 0
+}
+
 function do_upgrade() {
 	FILE="$1"
 
@@ -15,7 +67,10 @@ function do_upgrade() {
 	fi
 
 	# Extract everything over rootfs and delete pre-update if needed
-	gunzip $FILE -c | tar -xvC / > /dev/null && rm -f $FILE
+	if gunzip $FILE -c | tar -xvC / > /dev/null; then
+		rm -f $FILE
+		touch /tmp/rootfs_upgrade_success
+	fi
 	rm -f /pre-update
 
 	# Run post-update if applicable
@@ -31,8 +86,13 @@ start() {
 	# Check for update file in /boot and install it if present
 	if [ -f "/boot/$UPGRADE_FILE" ]; then
 		echo "Found $UPGRADE_FILE on /boot, installing... "
-		do_upgrade "/boot/$UPGRADE_FILE"
-		[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		if check_version "/boot/$UPGRADE_FILE"; then
+			do_upgrade "/boot/$UPGRADE_FILE"
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		else
+			echo "Version check failed, upgrade aborted."
+			mv "/boot/$UPGRADE_FILE" "/boot/${UPGRADE_FILE}.invalid.$(date +%Y%m%d%H%M%S)"
+		fi
 	fi
 
 	# Keep checking for updates on USB drives
@@ -40,9 +100,14 @@ start() {
 		for MOUNT_POINT in $(echo /media/usb[0-7] 2>/dev/null); do
 			if mountpoint -q "$MOUNT_POINT"; then
 				if [ -f "$MOUNT_POINT/$UPGRADE_FILE" ]; then
-		echo "Found $UPGRADE_FILE on $MOUNT_POINT, installing... "
-					do_upgrade "$MOUNT_POINT/$UPGRADE_FILE"
-					[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+					echo "Found $UPGRADE_FILE on $MOUNT_POINT, installing... "
+					if check_version "$MOUNT_POINT/$UPGRADE_FILE"; then
+						do_upgrade "$MOUNT_POINT/$UPGRADE_FILE"
+						[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+					else
+						echo "Version check failed, upgrade aborted."
+						mv "$MOUNT_POINT/$UPGRADE_FILE" "$MOUNT_POINT/${UPGRADE_FILE}.invalid.$(date +%Y%m%d%H%M%S)"
+					fi
 				fi
 			fi
 		done
