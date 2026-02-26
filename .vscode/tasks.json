@@ -1,0 +1,240 @@
+{
+    "version": "2.0.0",
+    "inputs": [
+        {
+            "type": "pickString",
+            "id": "sdCardDevice",
+            "description": "Select the SD card device to flash",
+            "options": [
+                "/dev/sda",
+                "/dev/sdb",
+                "/dev/sdc",
+                "/dev/sdd",
+                "/dev/sde",
+                "/dev/sdf",
+                "/dev/sdg",
+                "/dev/sdh",
+                "/dev/sdi",
+                "/dev/sdj",
+                "/dev/sdk",
+                "/dev/sdl",
+                "/dev/sdm",
+                "/dev/sdn",
+                "/dev/sdo",
+                "/dev/sdp",
+                "/dev/sdq",
+                "/dev/sdr",
+                "/dev/sds",
+                "/dev/sdt",
+                "/dev/sdu",
+                "/dev/sdv",
+                "/dev/sdw",
+                "/dev/sdx",
+                "/dev/sdy",
+                "/dev/sdz"
+            ]
+        }
+    ],
+    "tasks": [
+        {
+            "label": "Save Buildroot Config",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "savedefconfig"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Save Buildroot with the config"
+        },
+        {
+            "label": "Configure Buildroot",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "duet3d_duetscreen_defconfig"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Configure Buildroot with the DuetScreen config"
+        },
+        {
+            "label": "Build Project",
+            "type": "shell",
+            "command": "make",
+            "args": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Build the project to create sdcard.img",
+            "dependsOn": [
+                "Configure Buildroot"
+            ]
+        },
+        {
+            "label": "Clean Project",
+            "type": "shell",
+            "command": "rm -rf output dl",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Clean the project"
+        },
+        {
+            "label": "Clean DuetScreen",
+            "type": "shell",
+            "command": "rm -rf output/build/duetscreen-HEAD; rm -rf dl/duetscreen",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Clean the DuetScreen build directory"
+        },
+        {
+            "label": "Reconfigure Linux",
+            "type": "shell",
+            "command": "make linux-reconfigure",
+            "linux": {
+                "options": {
+                    "env": {
+                        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+                    }
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Reconfigure the Linux build"
+        },
+        {
+            "label": "Build Project - WSL",
+            "type": "shell",
+            "command": "source ${workspaceFolder}/.vscode/.env; make",
+            "args": [],
+            "options": {
+                "env": {
+                    "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "detail": "Build the project to create sdcard.img on WSL",
+            "dependsOn": [
+                "Configure Buildroot"
+            ]
+        },
+        {
+            "label": "Flash SD Card",
+            "type": "shell",
+            "command": "sudo",
+            "args": [
+                "dd",
+                "if=output/images/sdcard.img",
+                "of=${input:sdCardDevice}",
+                "bs=4M",
+                "status=progress",
+                "conv=fsync"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Flash the sdcard.img to the SD card."
+        },
+        {
+            "label": "Build DuetScreen - Github",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "duetscreen-reconfigure"
+            ],
+            "options": {
+                "env": {
+                    "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Task to build only the DuetScreen component from github master. Output at `output/target/usr/bin/DuetScreen`"
+        },
+        {
+            "label": "Build DuetScreen - Local",
+            "type": "shell",
+            "command": "source ${workspaceFolder}/.vscode/.env; make duetscreen-reconfigure",
+            "args": [],
+            "options": {
+                "env": {
+                    "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Task to build only the DuetScreen component from a local path. Output at `output/target/usr/bin/DuetScreen`"
+        },
+        {
+            "label": "Push DuetScreen - ADB",
+            "type": "shell",
+            "command": "adb shell start-stop-daemon -K -n DuetScreen; adb push output/target/usr/bin/DuetScreen /usr/bin/DuetScreen; adb shell start-stop-daemon -S DuetScreen",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Push the DuetScreen binary to the screen and restart the service",
+            "dependsOn": [
+                "Build DuetScreen - Local"
+            ],
+            "runOptions": {
+                "instanceLimit": 2,
+            }
+        },
+        {
+            "label": "Push DuetScreen - SSH",
+            "type": "shell",
+            "command": "source ${workspaceFolder}/.vscode/.env; ./push_duetscreen.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Push the DuetScreen binary to the screen and restart the service",
+            "dependsOn": [
+                "Build DuetScreen - Local"
+            ],
+            "runOptions": {
+                "instanceLimit": 2,
+            }
+        }
+    ]
+}

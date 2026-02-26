@@ -14,3 +14,7 @@
 *~
 *.pyc
 /br.log
+
+.vscode/.env
+.vscode/settings.json
+package/duetscreen/src
