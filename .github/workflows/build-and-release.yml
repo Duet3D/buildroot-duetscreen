@@ -1,0 +1,74 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          token: ${{ secrets.PAT }}
+
+    #   - name: Configure Git
+    #     run: |
+    #       git config --global url."https://${PAT}@github.com/".insteadOf "https://github.com/"
+    #     env:
+    #       PAT: ${{ secrets.PAT }}
+
+    #   - name: Install Dependencies
+    #     run: |
+    #       ./scripts/install_prerequisites.sh
+
+    #   - name: Configure
+    #     run: make duet3d_duetscreen_sd_defconfig
+
+    #   - name: Build
+    #     run: make
+    #     env:
+    #       GIT_TERMINAL_PROMPT: 0
+
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          ./scripts/release_notes.sh | tee -a $GITHUB_ENV >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_OUTPUT
+
+    #   - name: Prepare artifacts
+    #     shell: bash
+    #     run: |
+    #       mkdir artifacts
+    #       cp ./output/images/sdcard.img ./artifacts/
+
+    #   - name: Upload artifacts
+    #     uses: actions/upload-artifact@v4
+    #     with:
+    #       name: buildroot-duetscreen
+    #       path: artifacts/*
+
+      - name: Check Branch
+        id: check_branch
+        run: |
+          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+          echo "IS_MASTER=$([[ "$BRANCH_NAME" == "master" ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: artifacts/*
+          body: ${{ steps.changelog.outputs.CHANGELOG }}
+          prerelease: ${{ steps.check_branch.outputs.IS_MASTER != 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
