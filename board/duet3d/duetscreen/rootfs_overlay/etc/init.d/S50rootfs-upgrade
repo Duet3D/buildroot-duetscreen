@@ -2,15 +2,22 @@
 
 UPGRADE_FILE="update.tar.gz"
 PIDFILE="/var/run/S50rootfs-upgrade.pid"
+UPGRADE_STATUS_SOCKET="/run/duetscreen/upgrade.sock"
+UPGRADE_STATUS_DIR="/var/lib/duetscreen"
+UPGRADE_STATUS_FILE="$UPGRADE_STATUS_DIR/upgrade_status.json"
+UPGRADE_STATUS_SEQ_FILE="$UPGRADE_STATUS_DIR/upgrade_status.sequence"
+
+UPDATE_BUILDROOT_VERSION=""
+PATCH_WARNING=0
 
 
 # Version check function (robust BusyBox tar extraction)
 check_version() {
 	ROOTFS_VERSION_FILE="/etc/buildroot_version"
 	UPDATE_VERSION_FILE="/tmp/update_buildroot_version"
-	FEEDBACK_FILE="/tmp/rootfs_upgrade_failed"
-	PATCH_WARNING_FILE="/tmp/rootfs_upgrade_patch_warning"
 	UPDATE_TAR="$1"
+	UPDATE_BUILDROOT_VERSION=""
+	PATCH_WARNING=0
 
 	# Try to extract buildroot_version (with or without ./ prefix)
 	gunzip -c "$UPDATE_TAR" | tar -xOf - buildroot_version 2>/dev/null > "$UPDATE_VERSION_FILE"
@@ -30,6 +37,7 @@ check_version() {
 
 	ROOTFS_VERSION=$(cat "$ROOTFS_VERSION_FILE" | tr -d '\r\n')
 	UPDATE_VERSION=$(cat "$UPDATE_VERSION_FILE" | tr -d '\r\n')
+	UPDATE_BUILDROOT_VERSION="$UPDATE_VERSION"
 
 	echo "Current rootfs version: $ROOTFS_VERSION, update version: $UPDATE_VERSION"
 
@@ -38,8 +46,7 @@ check_version() {
 	UPDATE_BASE=$(echo "$UPDATE_VERSION" | cut -d. -f1,2)
 
 	if [ "$ROOTFS_BASE" != "$UPDATE_BASE" ]; then
-		echo "Version mismatch: rootfs $ROOTFS_VERSION, update $UPDATE_VERSION" > "$FEEDBACK_FILE"
-		rm -f "$PATCH_WARNING_FILE"
+		echo "Version mismatch: rootfs $ROOTFS_VERSION, update $UPDATE_VERSION"
 		return 1
 	fi
 
@@ -47,29 +54,92 @@ check_version() {
 	ROOTFS_PATCH=$(echo "$ROOTFS_VERSION" | cut -d. -f3)
 	UPDATE_PATCH=$(echo "$UPDATE_VERSION" | cut -d. -f3)
 	if [ -n "$ROOTFS_PATCH" ] && [ -n "$UPDATE_PATCH" ] && [ "$ROOTFS_PATCH" != "$UPDATE_PATCH" ]; then
-		echo "Patch version differs: rootfs $ROOTFS_VERSION, update $UPDATE_VERSION" > "$PATCH_WARNING_FILE"
+		echo "Patch version differs: rootfs $ROOTFS_VERSION, update $UPDATE_VERSION"
+		PATCH_WARNING=1
 	else
-		rm -f "$PATCH_WARNING_FILE"
+		PATCH_WARNING=0
 	fi
-	rm -f "$FEEDBACK_FILE"
 	return 0
 }
 
-function do_upgrade() {
+post_upgrade_status() {
+	RESULT="$1"
+	TARGET_BUILDROOT="$2"
+
+	echo "Posting upgrade status: result=$RESULT, target_buildroot=$TARGET_BUILDROOT"
+
+	mkdir -p "$UPGRADE_STATUS_DIR" >/dev/null 2>&1 || true
+
+	if [ -f "$UPGRADE_STATUS_SEQ_FILE" ]; then
+		SEQUENCE=$(cat "$UPGRADE_STATUS_SEQ_FILE" 2>/dev/null || printf '0')
+	else
+		SEQUENCE="0"
+	fi
+
+	case "$SEQUENCE" in
+		''|*[!0-9]*)
+			SEQUENCE="0"
+			;;
+	esac
+
+	SEQUENCE=$((SEQUENCE + 1))
+	printf '%s\n' "$SEQUENCE" > "$UPGRADE_STATUS_SEQ_FILE"
+
+	PAYLOAD=$(printf '{"result":"%s","target_buildroot":"%s","sequence":%s}' "$RESULT" "$TARGET_BUILDROOT" "$SEQUENCE")
+	TMP_STATUS_FILE="${UPGRADE_STATUS_FILE}.tmp.$$"
+	printf '%s\n' "$PAYLOAD" > "$TMP_STATUS_FILE"
+	mv "$TMP_STATUS_FILE" "$UPGRADE_STATUS_FILE"
+	echo "Upgrade status file updated: $UPGRADE_STATUS_FILE"
+
+	send_upgrade_status_socket() {
+		if command -v socat >/dev/null 2>&1; then
+			printf '%s' "$PAYLOAD" | socat -u - "UNIX-SENDTO:$UPGRADE_STATUS_SOCKET" >/dev/null 2>&1 && return 0
+		elif command -v nc >/dev/null 2>&1; then
+			printf '%s' "$PAYLOAD" | nc -u -U "$UPGRADE_STATUS_SOCKET" >/dev/null 2>&1 && return 0
+			printf '%s' "$PAYLOAD" | nc -U "$UPGRADE_STATUS_SOCKET" >/dev/null 2>&1 && return 0
+		fi
+		return 1
+	}
+
+	has_socket_sender() {
+		command -v socat >/dev/null 2>&1 && return 0
+		command -v nc >/dev/null 2>&1 && return 0
+		return 1
+	}
+
+	if ! has_socket_sender; then
+		echo "No socket sender available (socat/nc missing); relying on persisted status file."
+		return 0
+	fi
+
+	ATTEMPT=0
+	while [ "$ATTEMPT" -lt 25 ]; do
+		if [ -S "$UPGRADE_STATUS_SOCKET" ] && send_upgrade_status_socket; then
+			echo "Posted upgrade status to socket."
+			return 0
+		fi
+		ATTEMPT=$((ATTEMPT + 1))
+		sleep 0.2
+	done
+
+	echo "Upgrade status socket notification failed after retries (will be consumed from status file on startup)."
+}
+do_upgrade() {
 	FILE="$1"
+	UPGRADE_OK=0
 
 	# Run pre-update if applicable
-	gunzip -c $FILE | tar -xvC / pre-update &> /dev/null || true
+	gunzip -c "$FILE" | tar -xvC / pre-update >/dev/null 2>&1 || true
 	if [ -f /pre-update ]; then
 		chmod +x /pre-update
 		echo "Running pre-update script..."
-		/pre-update $FILE
+		/pre-update "$FILE"
 	fi
 
 	# Extract everything over rootfs and delete pre-update if needed
-	if gunzip $FILE -c | tar -xvC / > /dev/null; then
-		rm -f $FILE
-		touch /tmp/rootfs_upgrade_success
+	if gunzip "$FILE" -c | tar -xvC / > /dev/null; then
+		rm -f "$FILE"
+		UPGRADE_OK=1
 	fi
 	rm -f /pre-update
 
@@ -80,6 +150,11 @@ function do_upgrade() {
 		/post-update
 		rm /post-update
 	fi
+
+	if [ "$UPGRADE_OK" -eq 1 ]; then
+		return 0
+	fi
+	return 1
 }
 
 start() {
@@ -87,11 +162,20 @@ start() {
 	if [ -f "/boot/$UPGRADE_FILE" ]; then
 		echo "Found $UPGRADE_FILE on /boot, installing... "
 		if check_version "/boot/$UPGRADE_FILE"; then
-			do_upgrade "/boot/$UPGRADE_FILE"
-			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+			if do_upgrade "/boot/$UPGRADE_FILE"; then
+				if [ "$PATCH_WARNING" -eq 1 ]; then
+					post_upgrade_status "warning" "$UPDATE_BUILDROOT_VERSION"
+				else
+					post_upgrade_status "success" "$UPDATE_BUILDROOT_VERSION"
+				fi
+				echo "OK"
+			else
+				echo "ERROR"
+			fi
 		else
 			echo "Version check failed, upgrade aborted."
-			mv "/boot/$UPGRADE_FILE" "/boot/${UPGRADE_FILE}.invalid.$(date +%Y%m%d%H%M%S)"
+			post_upgrade_status "error" "$UPDATE_BUILDROOT_VERSION"
+			rm "/boot/$UPGRADE_FILE"
 		fi
 	fi
 
@@ -102,10 +186,19 @@ start() {
 				if [ -f "$MOUNT_POINT/$UPGRADE_FILE" ]; then
 					echo "Found $UPGRADE_FILE on $MOUNT_POINT, installing... "
 					if check_version "$MOUNT_POINT/$UPGRADE_FILE"; then
-						do_upgrade "$MOUNT_POINT/$UPGRADE_FILE"
-						[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+						if do_upgrade "$MOUNT_POINT/$UPGRADE_FILE"; then
+							if [ "$PATCH_WARNING" -eq 1 ]; then
+								post_upgrade_status "warning" "$UPDATE_BUILDROOT_VERSION"
+							else
+								post_upgrade_status "success" "$UPDATE_BUILDROOT_VERSION"
+							fi
+							echo "OK"
+						else
+							echo "ERROR"
+						fi
 					else
 						echo "Version check failed, upgrade aborted."
+						post_upgrade_status "error" "$UPDATE_BUILDROOT_VERSION"
 						mv "$MOUNT_POINT/$UPGRADE_FILE" "$MOUNT_POINT/${UPGRADE_FILE}.invalid.$(date +%Y%m%d%H%M%S)"
 					fi
 				fi
