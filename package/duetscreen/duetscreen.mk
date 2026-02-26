@@ -24,7 +24,7 @@ DUETSCREEN_GET_VERSION_CMD = GIT_DIR=$(BR2_DL_DIR)/duetscreen/git/.git git descr
 endif
 DUETSCREEN_LICENSE = MIT
 DUETSCREEN_LICENSE_FILES = license.txt
-DUETSCREEN_DEPENDENCIES = ffmpeg libpng libusb-compat sdl2 spdlog fmt libgpiod wpa_supplicant freetype libxkbcommon
+DUETSCREEN_DEPENDENCIES = ffmpeg libpng libusb-compat sdl2 spdlog fmt socat libgpiod wpa_supplicant freetype libxkbcommon
 
 ifndef DUETSCREEN_PRESET
 DUETSCREEN_PRESET = T113
