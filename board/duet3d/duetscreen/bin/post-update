@@ -1,0 +1,129 @@
+#!/bin/sh
+
+# Only permit update if running from SD card
+if [ -z "$(cat /proc/mounts | grep ' / ext4 ')" ]; then
+    echo "Not using ext4 partition, skipping update"
+    rm -f awboot-boot-spi.bin sun8i-duet3d-duetscreen-linux.dtb optee.bin zImage rootfs.ubi post-update
+    exit 0
+fi
+
+# Stop DuetScreen first
+/etc/init.d/S21DuetScreenMonitor stop
+
+# Blank the screen first and use ffmpeg to write an almost black image. Without this the display freezes and fades away
+echo 0 > /sys/class/vtconsole/vtcon1/bind
+ffmpeg -loglevel quiet -f lavfi -i color=0x010101:s=1024x600 -f rawvideo -pix_fmt bgra -y /dev/fb0
+echo 1 > /sys/class/vtconsole/vtcon1/bind
+echo -ne '\033c' > /dev/tty1
+
+# Begin NAND Flash Update
+echo "NAND Flash Update" > /dev/tty1
+echo > /dev/tty1
+
+# Check if rootfs.ubi exists
+if [ ! -f rootfs.ubi ]; then
+    echo "Error: rootfs.ubi not found!" > /dev/tty1
+    exit 1
+fi
+
+# Helper function to check if partition needs update
+needs_update() {
+    local mtd_dev="$1"
+    local file="$2"
+    local file_size=$(wc -c < "$file")
+    
+    # Read partition content and compare with file (using 2048 byte blocks for speed)
+    # cmp returns 0 if files are identical, 1 if different
+    if dd if="$mtd_dev" bs=2048 count=$(( ($file_size + 2047) / 2048 )) 2>/dev/null | head -c "$file_size" | cmp -s - "$file"; then
+        return 1  # Same, no update needed
+    else
+        return 0  # Different, needs update
+    fi
+}
+
+# Write Flash but track bad blocks. If Flash cannot be written even with -N option, exit with error
+bad_blocks=""
+
+# Update awboot
+if needs_update /dev/mtd0 awboot-boot-spi.bin; then
+    echo "Updating awboot..." > /dev/tty1
+    flash_erase -N -q /dev/mtd0 0 0
+    if ! nandwrite -q -p /dev/mtd0 awboot-boot-spi.bin; then
+        if nandwrite -q -N -p /dev/mtd0 awboot-boot-spi.bin; then
+            bad_blocks="${bad_blocks}awboot "
+        else
+            echo "Error: Failed to write awboot" > /dev/tty1
+            exit 1
+        fi
+    fi
+else
+    echo "awboot is up to date" > /dev/tty1
+fi
+
+# Update dtb
+if needs_update /dev/mtd1 sun8i-duet3d-duetscreen-linux.dtb; then
+    echo "Updating dtb..." > /dev/tty1
+    flash_erase -N -q /dev/mtd1 0 0
+    if ! nandwrite -q -p /dev/mtd1 sun8i-duet3d-duetscreen-linux.dtb; then
+        if nandwrite -q -N -p /dev/mtd1 sun8i-duet3d-duetscreen-linux.dtb; then
+            bad_blocks="${bad_blocks}dtb "
+        else
+            echo "Error: Failed to write dtb" > /dev/tty1
+            exit 1
+        fi
+    fi
+else
+    echo "dtb is up to date" > /dev/tty1
+fi
+
+# Update optee
+if needs_update /dev/mtd2 optee.bin; then
+    echo "Updating optee..." > /dev/tty1
+    flash_erase -N -q /dev/mtd2 0 0
+    if ! nandwrite -q -p /dev/mtd2 optee.bin; then
+        if nandwrite -q -N -p /dev/mtd2 optee.bin; then
+            bad_blocks="${bad_blocks}optee "
+        else
+            echo "Error: Failed to write optee" > /dev/tty1
+            exit 1
+        fi
+    fi
+else
+    echo "optee is up to date" > /dev/tty1
+fi
+
+# Update kernel
+if needs_update /dev/mtd3 zImage; then
+    echo "Updating kernel..." > /dev/tty1
+    flash_erase -N -q /dev/mtd3 0 0
+    if ! nandwrite -q -p /dev/mtd3 zImage; then
+        if nandwrite -q -N -p /dev/mtd3 zImage; then
+            bad_blocks="${bad_blocks}kernel "
+        else
+            echo "Error: Failed to write kernel" > /dev/tty1
+            exit 1
+        fi
+    fi
+else
+    echo "kernel is up to date" > /dev/tty1
+fi
+
+# Write UBI partition. UBI does bad-block management so don't track errors here
+echo "Updating ubi..." > /dev/tty1
+ubiformat /dev/mtd4 --flash-image=rootfs.ubi > /dev/tty1 2>&1
+
+# Report completion status
+if [ -z "$bad_blocks" ]; then
+    echo "Done!" > /dev/tty1
+else
+    # Convert space-separated list to comma-separated
+    bad_blocks_formatted=$(echo "$bad_blocks" | sed 's/ /, /g' | sed 's/, $//')
+    echo "Done with bad blocks in: $bad_blocks_formatted" > /dev/tty1
+fi
+
+# Clean up again
+rm -f awboot-boot-spi.bin sun8i-duet3d-duetscreen-linux.dtb optee.bin zImage rootfs.ubi post-update
+
+# Wait a moment and then restart DuetScreen
+sleep 10
+/etc/init.d/S21DuetScreenMonitor start

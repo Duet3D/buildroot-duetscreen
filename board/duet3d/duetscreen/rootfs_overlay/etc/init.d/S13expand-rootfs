@@ -1,0 +1,22 @@
+#!/bin/sh
+
+case "$1" in
+	start)
+		if [ -z "$(cat /proc/mounts | grep ' / ext4 ')" ]; then
+			echo "Not using ext4 partition, skipping root FS expansion"
+			rm -f /etc/init.d/S12expand-rootfs
+			exit 0
+		fi
+
+		echo -n "Expanding the root FS: "
+		resize2fs /dev/mmcblk0p2 &>/dev/null
+		ret=$?
+		[ ${ret} -eq 0 ] && echo "done" || echo "failed"
+		rm -f /etc/init.d/S13expand-rootfs
+		exit ${ret}
+		;;
+	*)
+		echo "Usage: $0 start" >&2
+		exit 1
+		;;
+esac

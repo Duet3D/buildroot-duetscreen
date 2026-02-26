@@ -1,0 +1,281 @@
+#!/bin/sh
+
+# This init script contains an embedded monitor that keeps /usr/bin/DuetScreen running.
+# The 'start' action backgrounds the embedded monitor using start-stop-daemon.
+
+NAME=DuetScreenMonitor
+PIDFILE=/var/run/$NAME.pid
+
+# Monitor configuration and helpers
+APP="/usr/bin/DuetScreen"
+LOG_FILE="/var/log/duetscreen-monitor.log"
+TAG="DuetScreen-monitor"
+APP_LOG="/var/log/DuetScreen.log"
+APP_LOG_LINES=${APP_LOG_LINES:-50}
+
+# Watchdog file: if stale, force-restart the app
+WATCHDOG_FILE="${WATCHDOG_FILE:-/tmp/duetscreen-watchdog}"
+# Seconds; if 0 or negative, watchdog check is disabled
+WATCHDOG_TIMEOUT="${WATCHDOG_TIMEOUT:-5}"
+# Flag file indicating the last stop was due to watchdog staleness
+STALE_FLAG="${STALE_FLAG:-/tmp/duetscreen-stale.flag}"
+
+# Optional tuning via environment variables (defaults favor immediate restarts)
+MIN_UPTIME="${MIN_UPTIME:-0}"
+BACKOFF_START="${BACKOFF_START:-0}"
+BACKOFF_MAX="${BACKOFF_MAX:-0}"
+RESTART_LIMIT="${RESTART_LIMIT:-0}"
+
+mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+touch "$LOG_FILE" 2>/dev/null || true
+
+# Read monotonic seconds from /proc/uptime (immune to wall-clock changes).
+# Falls back to wall clock if /proc/uptime is unavailable.
+get_monotonic_secs() {
+	if [ -r /proc/uptime ]; then
+		read _up _ < /proc/uptime 2>/dev/null
+		echo "${_up%%.*}"
+	else
+		date +%s 2>/dev/null || echo 0
+	fi
+}
+
+log_msg() {
+	# Prefer syslog via logger if available, always append to LOG_FILE too
+	ts="$(date -Iseconds 2>/dev/null || date '+%Y-%m-%dT%H:%M:%S%z')"
+	msg="$ts $*"
+	if command -v logger >/dev/null 2>&1; then
+		logger -t "$TAG" -- "$*"
+	fi
+	printf '%s\n' "$msg" >> "$LOG_FILE" 2>/dev/null || true
+}
+
+# Append the last 50 lines of the DuetScreen application log to the monitor log.
+# Avoid spamming syslog by writing directly to LOG_FILE with clear markers.
+dump_duetscreen_log() {
+	cause="$1"
+	ts="$(date -Iseconds 2>/dev/null || date '+%Y-%m-%dT%H:%M:%S%z')"
+	if [ -r "$APP_LOG" ]; then
+		{
+			printf '%s %s\n' "$ts" "---- DuetScreen.log tail (last ${APP_LOG_LINES} lines) before restart; cause=${cause} ----"
+			tail -n "$APP_LOG_LINES" "$APP_LOG" 2>/dev/null || true
+			printf '%s %s\n' "$ts" "---- End DuetScreen.log tail ----"
+		} >> "$LOG_FILE" 2>/dev/null || true
+	else
+		printf '%s %s\n' "$ts" "---- DuetScreen.log missing or unreadable before restart; cause=${cause} ----" >> "$LOG_FILE" 2>/dev/null || true
+	fi
+}
+
+run_monitor() {
+	if [ ! -x "$APP" ]; then
+		log_msg "ERROR: $APP not found or not executable"
+		# Continue looping; it may appear later
+	fi
+
+	running=1
+	stopping=0
+	child_pid=""
+	watcher_pid=""
+	restart_count=0
+	backoff="$BACKOFF_START"
+
+	terminate() {
+		stopping=1
+		running=0
+		# Forward TERM to child if running
+		if [ -n "$child_pid" ] && kill -0 "$child_pid" 2>/dev/null; then
+			kill -TERM "$child_pid" 2>/dev/null || true
+			# Give it a brief chance to exit cleanly
+			wait "$child_pid" 2>/dev/null || true
+		fi
+		# Stop watchdog if running
+		if [ -n "$watcher_pid" ] && kill -0 "$watcher_pid" 2>/dev/null; then
+			kill -TERM "$watcher_pid" 2>/dev/null || true
+			wait "$watcher_pid" 2>/dev/null || true
+		fi
+		log_msg "Monitor stopping"
+		exit 0
+	}
+
+	trap terminate TERM INT
+
+	log_msg "Monitor started (pid $$)"
+
+	while [ "$running" -eq 1 ]; do
+		start_ts=$(date +%s 2>/dev/null || echo 0)
+		touch "$WATCHDOG_FILE" 2>/dev/null || true
+
+		"$APP" "$@" &
+		child_pid=$!
+
+		# Start a lightweight background watcher that monitors the watchdog file
+		# and gracefully restarts the child if the file is stale.
+		if [ "$WATCHDOG_TIMEOUT" -gt 0 ] 2>/dev/null; then
+			(
+				# Use monotonic time to track staleness so that wall-clock changes
+				# (e.g. NTP sync) do not cause false watchdog restarts.
+				# We detect the app touching the file by comparing its mtime against
+				# the last seen mtime, then measure elapsed time monotonically.
+				_last_seen_mtime="$(date -r "$WATCHDOG_FILE" +%s 2>/dev/null || echo 0)"
+				_last_touch_mono="$(get_monotonic_secs)"
+
+				# Subshell loop ends automatically when child exits
+				while kill -0 "$child_pid" 2>/dev/null; do
+					# Only check if the file exists; if it's not present, skip to avoid
+					# false restarts on initial startup or systems that don't use the file.
+					if [ -e "$WATCHDOG_FILE" ]; then
+						_cur_mtime="$(date -r "$WATCHDOG_FILE" +%s 2>/dev/null || echo 0)"
+						_mono_now="$(get_monotonic_secs)"
+
+						if [ "$_cur_mtime" != "$_last_seen_mtime" ]; then
+							# App touched the file — reset monotonic baseline
+							_last_seen_mtime="$_cur_mtime"
+							_last_touch_mono="$_mono_now"
+						else
+							# mtime unchanged — check staleness with monotonic clock
+							age=$((_mono_now - _last_touch_mono))
+							if [ "$age" -gt "$WATCHDOG_TIMEOUT" ] 2>/dev/null; then
+								log_msg "Watchdog stale: $WATCHDOG_FILE age=${age}s > ${WATCHDOG_TIMEOUT}s; restarting DuetScreen"
+								# Mark stale cause so parent can dump logs even if the app exits with code 0
+								touch "$STALE_FLAG" 2>/dev/null || true
+								# Ask the child to terminate; the main loop's wait will observe exit
+								kill -TERM "$child_pid" 2>/dev/null || true
+								# Give a brief moment between checks to avoid tight loop
+								sleep 1
+								# Continue; if the child is still alive, the loop will repeat
+							fi
+						fi
+					fi
+					sleep 1
+				done
+			) &
+			watcher_pid=$!
+		else
+			watcher_pid=""
+		fi
+		# Wait for child to exit
+		wait "$child_pid"
+		status=$?
+		end_ts=$(date +%s 2>/dev/null || echo 0)
+		runtime=$((end_ts - start_ts))
+
+		# Ensure the watcher is stopped after the child exits
+		if [ -n "$watcher_pid" ] && kill -0 "$watcher_pid" 2>/dev/null; then
+			kill -TERM "$watcher_pid" 2>/dev/null || true
+			wait "$watcher_pid" 2>/dev/null || true
+			watcher_pid=""
+		fi
+
+		# If we're stopping due to a signal, do not restart
+		if [ "$stopping" -eq 1 ]; then
+			break
+		fi
+
+		# Determine reason
+		if [ "$status" -eq 0 ]; then
+			reason="exited normally (code 0)"
+		elif [ "$status" -ge 128 ]; then
+			sig=$((status - 128))
+			reason="terminated by signal $sig (status $status)"
+		else
+			reason="exited with code $status"
+		fi
+
+		# Determine if restart is due to watchdog staleness
+		was_stale=0
+		if [ -e "$STALE_FLAG" ]; then
+			was_stale=1
+			# Clear the flag for next iteration
+			rm -f "$STALE_FLAG" 2>/dev/null || true
+		fi
+
+		# Log crashes, stale restarts, and clean exits
+		if [ "$status" -ne 0 ]; then
+			log_msg "DuetScreen crashed: $reason; uptime=${runtime}s; restart_count=$restart_count"
+			# Before attempting a restart, capture the recent DuetScreen application log
+			dump_duetscreen_log "$reason"
+		elif [ "$was_stale" -eq 1 ]; then
+			log_msg "DuetScreen restart due to stale watchdog; uptime=${runtime}s; restart_count=$restart_count"
+			# Capture the recent DuetScreen application log before restarting even if exit was clean
+			dump_duetscreen_log "watchdog-stale"
+		else
+			log_msg "DuetScreen exited cleanly; uptime=${runtime}s; restarting"
+		fi
+
+		# If binary is missing or exec failed, avoid busy loop
+		if [ "$status" -eq 127 ] || [ ! -x "$APP" ]; then
+			sleep 1
+		fi
+
+		# Enforce restart limit if configured
+		if [ "$RESTART_LIMIT" -gt 0 ] && [ "$restart_count" -ge "$RESTART_LIMIT" ]; then
+			log_msg "Restart limit ($RESTART_LIMIT) reached; giving up"
+			exit 1
+		fi
+
+		restart_count=$((restart_count + 1))
+
+		# Apply backoff only when runtime is less than MIN_UPTIME (rapid crash loops)
+		if [ "$MIN_UPTIME" -gt 0 ] && [ "$runtime" -lt "$MIN_UPTIME" ]; then
+			# Backoff grows up to BACKOFF_MAX
+			if [ "$BACKOFF_MAX" -gt 0 ] && [ "$backoff" -gt "$BACKOFF_MAX" ]; then
+				backoff="$BACKOFF_MAX"
+			fi
+			if [ "$backoff" -gt 0 ]; then
+				log_msg "Backing off ${backoff}s (runtime ${runtime}s < MIN_UPTIME ${MIN_UPTIME}s)"
+				sleep "$backoff"
+			fi
+			# Increase backoff for next time, up to max (if max>0)
+			if [ "$BACKOFF_MAX" -gt 0 ] && [ "$backoff" -lt "$BACKOFF_MAX" ]; then
+				next=$((backoff + 1))
+				backoff=$([ "$next" -le "$BACKOFF_MAX" ] && echo "$next" || echo "$BACKOFF_MAX")
+			fi
+		else
+			# Reset backoff when app ran long enough or MIN_UPTIME is 0
+			backoff="$BACKOFF_START"
+		fi
+	done
+
+	exit 0
+}
+
+start() {
+	echo -n "Starting $NAME: "
+	echo 0 > /sys/class/vtconsole/vtcon1/bind
+	start-stop-daemon -S -b -q -p "$PIDFILE" -m -x "$0" -- run
+	[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+}
+
+stop() {
+	echo -n "Stopping $NAME: "
+	start-stop-daemon -K -q -p "$PIDFILE" --retry=TERM/5/KILL/2
+	[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+	ffmpeg -loglevel quiet -i /etc/splash.png -f rawvideo -pix_fmt bgra -y /dev/fb0 > /dev/null
+}
+
+restart() {
+	stop
+	start
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		restart
+		;;
+	run)
+		shift
+		run_monitor "$@"
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+		;;
+esac
+
+exit 0

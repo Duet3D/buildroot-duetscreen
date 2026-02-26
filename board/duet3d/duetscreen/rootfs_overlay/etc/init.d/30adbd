@@ -1,0 +1,47 @@
+#!/bin/sh
+
+DAEMON=/usr/bin/adbd
+DAEMON_OPTS=""
+NAME=adbd
+PIDFILE=/var/run/$NAME.pid
+
+start() {
+	echo -n "Starting $NAME: "
+	modprobe g_ffs
+	mkdir -p /dev/usb-ffs/adb
+	mount -t functionfs adb /dev/usb-ffs/adb
+	start-stop-daemon -S -b -q -p $PIDFILE -x $DAEMON -- $DAEMON_OPTS
+	[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+}
+
+stop() {
+	echo -n "Stopping $NAME: "
+	start-stop-daemon -K -q -p $PIDFILE
+	umount /dev/usb-ffs/adb
+	rmdir /dev/usb-ffs/adb
+	rmdir /dev/usb-ffs
+	[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+}
+
+restart() {
+	stop
+	start
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		restart
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+		;;
+esac
+
+exit 0

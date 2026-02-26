@@ -1,0 +1,104 @@
+#!/bin/sh
+
+case "$1" in
+	start)
+		# Apply WiFi config options
+		if [ -f /boot/dhcpcd.conf ]; then
+			echo -n "Found dhcpcd.conf on /boot, moving... "
+			mv /boot/dhcpcd.conf /etc/dhcpcd.conf
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
+		if [ -f /boot/wpa_supplicant.conf ]; then
+			echo -n "Found wpa_supplicant.conf on /boot, moving... "
+			mv /boot/wpa_supplicant.conf /etc/wpa_supplicant.conf
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
+
+		# Change root password via /boot/password(.txt) or lock root account
+		PW_FILE=""
+		if [ -f /boot/password ]; then
+			PW_FILE="/boot/password"
+		elif [ -f /boot/password.txt ]; then
+			PW_FILE="/boot/password.txt"
+		fi
+
+		if [ ! -z "$PW_FILE" ]; then
+			PW=`cat $PW_FILE`
+			if [ -z "$PW" ]; then
+				echo "Cannot update root password because it is empty!"
+			else
+				echo -n "Changing root password... "
+
+				# Change root password
+				echo -e "$PW\n$PW" | passwd &> /dev/null
+
+				# Overwrite password file with zeros and then delete it
+				echo "$PW" | tr '[:print:][:space:]' '0' > $PW_FILE
+				rm -f $PW_FILE
+
+				[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+			fi
+		fi
+
+		# Install SSH keys via /boot/authorized_keys
+		if [ -f /boot/authorized_keys ]; then
+			echo -n "Installing SSH keys... "
+
+			# Install certificate and adjust permissions
+			mkdir -p /root/.ssh
+			cp /boot/authorized_keys /root/.ssh/authorized_keys
+			chmod 600 /root/.ssh/authorized_keys
+
+			# Overwrite certificate with zeros and then delete it
+			KEY=`cat /boot/authorized_keys`
+			echo "$KEY" | tr '[:print:][:space:]' '0' > /boot/authorized_keys
+			rm -f /boot/authorized_keys
+
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
+
+		# Enable ADB if requested
+		if [ -f /boot/adb ]; then
+			echo -n "Enabling ADB... "
+			mv /etc/init.d/30adbd /etc/init.d/S30adbd
+			/etc/init.d/S30adbd start > /dev/null
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
+
+		# Enable SSH if requested
+		if [ -f /boot/ssh ] && [ ! -f /etc/init.d/S50dropbear ]; then
+			echo -n "Enabling SSH... "
+			mv /etc/init.d/50dropbear /etc/init.d/S50dropbear
+			/etc/init.d/S50dropbear start > /dev/null
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
+
+		# Enable getty console if required
+		if [ -f /boot/getty ] && [ -f /etc/inittab.getty ]; then
+			echo -n "Enabling getty on console... "
+			mv /etc/inittab.getty /etc/inittab
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
+
+		# Disable this service again if needed
+		if [ -f /etc/init.d/S02setup ]; then
+			echo -n "Disabling auto-setup service... "
+			mv /etc/init.d/S02setup /etc/init.d/02setup
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
+
+		# Copy screen settings
+		if [ -f /boot/duetscreen.json ]; then
+			echo -n "Found duetscreen.json on /boot, copying... "
+			cp /boot/duetscreen.json /etc/duetscreen.json
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
+
+		;;
+	stop)
+		;;
+	*)
+		echo "Usage: $0 start" >&2
+		exit 1
+		;;
+esac

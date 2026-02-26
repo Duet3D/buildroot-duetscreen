@@ -1,0 +1,15 @@
+#!/bin/sh
+
+case "$1" in
+	start)
+		echo -n "Loading touchscreen driver: "
+		modprobe gt9xxnew_ts
+		[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		;;
+	stop)
+		;;
+	*)
+		echo "Usage: $0 start" >&2
+		exit 1
+		;;
+esac

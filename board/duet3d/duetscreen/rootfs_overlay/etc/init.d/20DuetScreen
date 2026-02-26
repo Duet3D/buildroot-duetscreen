@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# This init script is only used to start/stop the DuetScreen application for development purposes.
+# S21DuetScreenMonitor is used in normal operation to restart DuetScreen if it crashes.
+
+DAEMON=/usr/bin/DuetScreen
+DAEMON_OPTS=""
+NAME=DuetScreen
+PIDFILE=/var/run/$NAME.pid
+
+start() {
+	echo -n "Starting $NAME: "
+	echo 0 > /sys/class/vtconsole/vtcon1/bind
+	start-stop-daemon -S -b -q -p $PIDFILE -m -x $DAEMON -- $DAEMON_OPTS
+	[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+}
+
+stop() {
+	echo -n "Stopping $NAME: "
+	start-stop-daemon -K -q -p $PIDFILE
+	ffmpeg -loglevel quiet -i /etc/splash.png -f rawvideo -pix_fmt bgra -y /dev/fb0 > /dev/null
+	[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+}
+
+restart() {
+	stop
+	start
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		restart
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+		;;
+esac
+
+exit 0

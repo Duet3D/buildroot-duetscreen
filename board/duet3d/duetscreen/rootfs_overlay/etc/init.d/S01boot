@@ -1,0 +1,28 @@
+#!/bin/sh
+
+case "$1" in
+	start)
+		if [ -f /etc/splash.png ]; then
+			echo 0 > /sys/class/vtconsole/vtcon1/bind
+			ffmpeg -loglevel quiet -i /etc/splash.png -f rawvideo -pix_fmt bgra -y /dev/fb0 > /dev/null
+		fi
+
+		if ! mountpoint -q /boot && [ -b /dev/mmcblk0p1 ]; then
+			echo -n "Mount boot: "
+			mount /dev/mmcblk0p1 /boot
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
+		;;
+	stop)
+		if mountpoint -q /boot; then
+			echo -n "Unmount boot: "
+			umount /boot
+			[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+		fi
+		;;
+	*)
+		echo "Usage: $0 start" >&2
+		exit 1
+		;;
+esac
+
