@@ -11,6 +11,25 @@ UPDATE_BUILDROOT_VERSION=""
 PATCH_WARNING=0
 
 
+flush_upgrade_writes() {
+	echo "Flushing filesystem buffers to persistent storage..."
+
+	# Flush all dirty buffers first.
+	sync
+
+	# Best-effort block-level flush for the rootfs backing device.
+	if command -v blockdev >/dev/null 2>&1; then
+		ROOT_DEV=$(awk '$2 == "/" { print $1; exit }' /proc/mounts)
+		if [ -n "$ROOT_DEV" ] && [ -b "$ROOT_DEV" ]; then
+			blockdev --flushbufs "$ROOT_DEV" >/dev/null 2>&1 || true
+		fi
+	fi
+
+	# Flush once more after metadata updates.
+	sync
+}
+
+
 # Version check function (robust BusyBox tar extraction)
 check_version() {
 	ROOTFS_VERSION_FILE="/etc/buildroot_version"
@@ -152,6 +171,7 @@ do_upgrade() {
 	fi
 
 	if [ "$UPGRADE_OK" -eq 1 ]; then
+		flush_upgrade_writes
 		return 0
 	fi
 	return 1
@@ -168,6 +188,7 @@ start() {
 				else
 					post_upgrade_status "success" "$UPDATE_BUILDROOT_VERSION"
 				fi
+				flush_upgrade_writes
 				echo "OK"
 			else
 				echo "ERROR"
@@ -192,6 +213,7 @@ start() {
 							else
 								post_upgrade_status "success" "$UPDATE_BUILDROOT_VERSION"
 							fi
+							flush_upgrade_writes
 							echo "OK"
 						else
 							echo "ERROR"
