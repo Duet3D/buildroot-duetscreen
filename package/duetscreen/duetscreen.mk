@@ -27,7 +27,7 @@ DUETSCREEN_LICENSE_FILES = license.txt
 DUETSCREEN_DEPENDENCIES = ffmpeg libpng libusb-compat sdl2 spdlog fmt socat libgpiod wpa_supplicant freetype libxkbcommon
 
 ifndef DUETSCREEN_PRESET
-DUETSCREEN_PRESET = T113
+DUETSCREEN_PRESET = T113-Release
 endif
 DUETSCREEN_CONF_OPTS = --preset $(DUETSCREEN_PRESET)
 DUETSCREEN_CONF_OPTS += -DBUILD_SHARED_LIBS=OFF
