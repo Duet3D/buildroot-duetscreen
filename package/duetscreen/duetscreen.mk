@@ -9,7 +9,14 @@ DUETSCREEN_VERSION = HEAD
 ifdef DUETSCREEN_SRC
 DUETSCREEN_SITE = $(DUETSCREEN_SRC)
 DUETSCREEN_SITE_METHOD = local
+# --delete: Buildroot's rsync only adds and updates, so files moved or deleted in the source would stay in the build
+# copy and be installed too (e.g. the UI's XML twice, from old and new folders). Excluded paths are kept: the build
+# output in out/, and Buildroot's own stamps and file lists in the build copy.
 DUETSCREEN_OVERRIDE_SRCDIR_RSYNC_EXCLUSIONS = \
+	--delete \
+	--exclude /.stamp_* \
+	--exclude /.files-list*.txt \
+	--exclude /.applied_patches_list \
 	--include .git \
 	--exclude libraries/lvgl/build \
 	--exclude libraries/lvgl/tests/build* \
